@@ -1,0 +1,27 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# don't ignore any additional .gitignore files
+!.gitignore
+
+# ignore everything in bin catalog except the .gitkeep file in it
+bin/*
+!.gitkeep
+
+# ignore dolhpin config files
+.directory
