@@ -12,15 +12,17 @@
 #include "const.h"
 
 char *itoa(int number);
+void tomsg(struct fifo_msg *msg, char* buf);
+void frommsg(struct fifo_msg *msg, char *buf);
+int simplefs_mount(char* name);
+int simplefs_umount();
 pid_t init_pid;
 
 int initfifo_fd;
 char ret[8];
-
+char tmpstr[11];
 int main(int argc, char *argv[])
 {
-	/*char *tmp = itoa(45678);
-	puts(tmp);*/
 	simplefs_mount("sfsfile");
 	puts("tworze fifo, nacisnij przycisk aby usunac");
 	getchar();
@@ -35,7 +37,7 @@ int simplefs_mount(char* name)
 	/*init_pid = fork();
 	if(init_pid == 0)
 	{	*/
-		struct fifo_msg *msg;
+		struct fifo_msg msg;
 		int tmp_fd=0;
 		int wrfifo_fd=-1;
 		char *wr_fifoname;
@@ -44,67 +46,79 @@ int simplefs_mount(char* name)
 		puts("otwieram fifo");
 		mkfifo(initfifo_name, 0666);
 		initfifo_fd = open(initfifo_name, O_RDONLY);
+		puts("czekam na pierwszego");
 		while(1)
 		{
-			puts("czekam na pierwszego");
-			read(initfifo_fd, msg, sizeof(msg));
-			puts("chujnia");
-			if(msg->type == LINK)
-			{puts("chujnia1");
+			
+			sleep(2);
+			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0)
+				continue;
+			printf("# INIT # type: %d code:%d code_2: %d\n", msg.type, msg.code, msg.code_2);
+			
+			if(msg.type == LINK)
+			{
+				
 				if(wrfifo_fd == -1)
 				{
-					printf("# INIT #: LINK pid:%d - pierwszy za init",msg->code);
-					char tmpfifoname[60] = "/home/szymon/Dokumenty/SFS UXP1A/UXP1A-fs-fifo/tests/fifo";
-					const char *tmpstr = itoa(msg->code);
+					printf("# INIT #: LINK pid:%d - pierwszy za init\n",msg.code);
+					//char tmpfifoname[80] = "fifos/fifo";
+					char tmpfifoname[80] = "fifo";
+					const char *tmpstr = itoa(msg.code);
 					wr_fifoname = strcat(tmpfifoname, tmpstr);
-					wr_pid = msg->code;
+					wr_pid = msg.code;
+					printf("kolejka do pisania inita:\n %s\n",wr_fifoname);
 					wrfifo_fd = open(wr_fifoname, O_WRONLY);
-					write(wrfifo_fd, msg, sizeof(msg));
-					struct fifo_msg tmpmsg;
-					tmpmsg.type=TOKEN;
-					tmpmsg.code=0;
-					msg = &tmpmsg;
-					write(wrfifo_fd, msg, sizeof(tmpmsg));
+					msg.code_2=-1;
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
+
+					msg.type=TOKEN;
+					msg.code=99999;
+					msg.code_2=99999;
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 				else
 				{
-					printf("# INIT #: LINK pid:%d",msg->code);
-					write(wrfifo_fd, msg, sizeof(msg));
+					printf("# INIT #: LINK pid:%d\n",msg.code);
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
-			else if(msg->type == UNLINK)
-			{puts("chujnia2");
-				if(wr_pid == msg->code)
+			else if(msg.type == UNLINK)
+			{
+				if(msg.code == wr_pid)
 				{
-					printf("# INIT #: UNLINK pid:%d - nastepny po init",msg->code);
-					 				
-					write(wrfifo_fd, msg, sizeof(msg));
+					printf("# INIT #: UNLINK pid:%d - nastepny po init\n",msg.code);
+					struct fifo_msg tmpmsg = msg;		
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 					close(wrfifo_fd);
-					if(msg->code_2 == -1)
+					if(tmpmsg.code_2 == -1)
 					{
-						wrfifo_fd = open(initfifo_name, O_RDONLY);
+						printf("nastepnik odlaczanego to init: %d\n", tmpmsg.code_2);
 						wr_pid = -1;
+						wrfifo_fd = -1;
 					}		
 					else	
-					{
-						char tmpfifoname[60] = "/home/szymon/Dokumenty/SFS UXP1A/UXP1A-fs-fifo/tests/fifo";
-						const char *tmpstr = itoa(msg->code_2);
+					{	
+						printf("nastepnik odlaczanego: %d\n", tmpmsg.code_2);
+						char tmpfifoname[63] = "fifo";
+						const char *tmpstr = itoa(tmpmsg.code_2);
 						wr_fifoname = strcat(tmpfifoname, tmpstr);
-						wrfifo_fd = open(tmpfifoname, O_RDONLY);
-						wr_pid = msg->code_2;
+						wrfifo_fd = open(tmpfifoname, O_WRONLY);
+						wr_pid = tmpmsg.code_2;
+						
 					}
 				}
 				else
 				{
-					write(wrfifo_fd, msg, sizeof(msg));
+					printf("# INIT #: UNLINK pid:%d\n",msg.code);
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
-			else if(msg->type == TOKEN)
-			{puts("chujnia3");
-				printf("# INIT #: TOKEN ");
+			else if(msg.type == TOKEN)
+			{
+				printf("# INIT #: TOKEN \n");
 				if(wr_pid != -1)
 				{
-					write(wrfifo_fd, msg, sizeof(msg));
+					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
 		}
@@ -137,12 +151,9 @@ char *itoa(int number)
 		ret[j] = str[i]+48;
 	}
 	ret[j] = '\0';
+	puts(ret);
 	return ret;
 }
-
-
-
-
 
 
 

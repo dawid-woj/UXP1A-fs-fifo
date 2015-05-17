@@ -13,19 +13,24 @@
 char *itoa(int number);
 int fifomutex_lock();
 int fifomutex_unlock();
+void frommsg(struct fifo_msg *msg, char *tmp);
+void tomsg(struct fifo_msg *msg, char* buf);
 
 int wrfifo_fd, myfifo_fd;
 char *myfifo_name;
 char ret[8];
+char tmpstr[11];
 int pom_count=5;
 int nextproc_pid = -1;
 int mypid;
-struct fifo_msg *msg;
-char fifopath[60] = "/home/szymon/Dokumenty/SFS UXP1A/UXP1A-fs-fifo/tests/fifo";
+struct fifo_msg msg;
+
 int main(int argc, char *argv[])
 {
 	mypid = getpid();
 	const char* tmp = itoa(mypid);
+	//char fifopath[63] = "fifos/fifo";
+	char fifopath[63] = "fifo";
 	myfifo_name = strcat(fifopath, tmp);
 
 	puts("dupa");
@@ -39,54 +44,73 @@ int fifomutex_lock()
 	mkfifo(myfifo_name, 0666);
 	
 	wrfifo_fd = open(initfifo_name, O_WRONLY);
-	struct fifo_msg tmpmsg;
-	tmpmsg.type=LINK;
-	tmpmsg.code=mypid;
-	msg = &tmpmsg;
+	printf("Proces %d, pisze do: %s\n", mypid, initfifo_name);
+	msg.type=LINK;
+	msg.code=mypid;
+	msg.code_2=-1;
+	nextproc_pid = -1;
 	printf("Proces %d, wysyla LINK\n", mypid);
-	write(wrfifo_fd, msg, sizeof(msg));
-	//int undone=1;
-	myfifo_fd = open(myfifo_name, O_WRONLY);
+	write(wrfifo_fd, (char*)&msg, sizeof(msg));
+	puts(myfifo_name);
+	myfifo_fd = open(myfifo_name, O_RDONLY);
 	while(1)
 	{
-		read(myfifo_fd, msg, sizeof(msg));
-		if(msg->type == LINK)
+		sleep(1);
+		if( read(myfifo_fd, (char*)&msg, sizeof(msg)) == 0)
+			continue;
+		printf("Proces %d, type: %d code:%d code_2: %d\n", mypid, msg.type, msg.code, msg.code_2);
+		if(msg.type == LINK)
 		{
 			
-			if(nextproc_pid==-1)
+			if(msg.code == mypid)
+			{
+				printf("Proces %d, LINK - powraca, poprzednik: %d\n", mypid, msg.code_2);
+				//nextproc_pid = msg.code_2;
+			}			
+			else if(nextproc_pid==-1)
 			{
 				printf("Proces %d, LINK-nastepny init\n", mypid);
-				int tmpfifo_fd;
+				int tmpfifo_fd = wrfifo_fd;
+				//char fifopath[63] = "fifos/fifo";
+				char fifopath[63] = "fifo";
 				char *tmpfifoname;
-				tmpfifoname = strcat(fifopath, itoa(msg->code));
-				nextproc_pid = msg->code;
+				tmpfifoname = strcat(fifopath, itoa(msg.code));
+				printf("teraz pisze do: %s\n", tmpfifoname);
+				nextproc_pid = msg.code;
 				wrfifo_fd = open(tmpfifoname, O_WRONLY);
-				write(wrfifo_fd, msg, sizeof(msg));
+				msg.code_2 = mypid;
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				close(tmpfifo_fd);
 			}
 			else
 			{
-				printf("Proces %d, LINK pid:%d\n", mypid, msg->code);
-				write(wrfifo_fd, msg, sizeof(msg));
+				printf("Proces %d, LINK pid:%d\n", mypid, msg.code);
+				msg.code_2 = mypid;
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
-		else if(msg->type == UNLINK)
+		else if(msg.type == UNLINK)
 		{
 			
-			if(msg->code == mypid)
+			if(msg.code == mypid)
 			{
-				printf("Proces %d, UNLINK od siebie\n", mypid);
+				printf("Proces %d, UNLINK od siebie, odsyla token\n", mypid);
+				msg.type=TOKEN;
+				msg.code=mypid;
+				msg.code_2=99999;
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				close(wrfifo_fd);
-				unlink(myfifo_name);
 				close(myfifo_fd);
-				return 0;
+				unlink(myfifo_name);
+				
+				exit(0);
 			}
-			else if(msg->code == nextproc_pid)
+			else if(msg.code == nextproc_pid)
 			{
-				printf("Proces %d, UNLINK-nastepny proces sie odlacza\n", mypid);
-				write(wrfifo_fd, msg, sizeof(msg));
+				printf("Proces %d, UNLINK-nastepny proces sie odlacza next %d\n", mypid, nextproc_pid);
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				close(wrfifo_fd);
-				if(msg->code_2 == -1)
+				if(msg.code_2 == -1)
 				{
 					wrfifo_fd = open(initfifo_name, O_RDONLY);
 					nextproc_pid = -1;
@@ -94,42 +118,50 @@ int fifomutex_lock()
 				else	
 				{
 					char *tmpfifoname;
-					tmpfifoname = strcat(fifopath, itoa(msg->code_2));
-					wrfifo_fd = open(tmpfifoname, O_RDONLY);
-					nextproc_pid = msg->code_2;
+					//char fifopath[63] = "fifos/fifo";
+					char fifopath[63] = "fifo";
+					tmpfifoname = strcat(fifopath, itoa(msg.code_2));
+					wrfifo_fd = open(tmpfifoname, O_WRONLY);
+			
 				}
 			}
 			else
 			{
-				printf("Proces %d, UNLINK pid:%d\n", mypid, msg->code);
-				write(wrfifo_fd, msg, sizeof(msg));
+				printf("Proces %d, UNLINK pid:%d\n", mypid, msg.code);
+			
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
-		else if(msg->type == TOKEN)
+		else if(msg.type == TOKEN)
 		{
-			printf("Pracuje proces %d, %d. obieg\n", mypid, 6-pom_count);
+			if(pom_count<=0)
+			{
+				fifomutex_unlock();
+		
+			}
+			else
+			{
+				printf("Pracuje proces %d, %d. obieg\n", mypid, 6-pom_count);
+			sleep(1);
 			/*
 				pracuje...
 			*/
 			pom_count--;
+			msg.code = mypid;
 
-			write(wrfifo_fd, msg, sizeof(msg));	
-
-			if(pom_count<=0)
-			{
-				fifomutex_unlock();
-				//undone=0;
-			}
+			write(wrfifo_fd, (char*)&msg, sizeof(msg));
+			}		
 		}
 	}
 }
 int fifomutex_unlock()
 {	
 	struct fifo_msg unlinkmsg;
+	char tmpstr2[11];
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = mypid;
-	msg = &unlinkmsg;
-	write(wrfifo_fd, msg, sizeof(unlinkmsg));
+	unlinkmsg.code_2 = nextproc_pid;
+	write(wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
 	printf("Proces %d, wysyla UNLINK\n", mypid);
 }
 /*sam to cholerstwo napisałem, ale dziala jak cos*/

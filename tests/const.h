@@ -1,8 +1,8 @@
-#define LINK 0
-#define UNLINK 1
-#define TOKEN 2
-#define ERROR 3
-#define UNMOUNT 4
+#define LINK 1
+#define UNLINK 2
+#define TOKEN 3
+#define ERROR 4
+#define UNMOUNT 5
 
 struct fifo_msg
 {
@@ -11,4 +11,5 @@ struct fifo_msg
 	int code_2;
 };
 
-char *initfifo_name = "/home/szymon/Dokumenty/SFS UXP1A/UXP1A-fs-fifo/tests/initfifo";
+//char *initfifo_name = "fifos/initfifo";
+char *initfifo_name = "initfifo";
