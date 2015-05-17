@@ -6,7 +6,7 @@
 #define SFS_RDWR	4	// Bit 2
 #define SFS_CREAT	8	// Bit 3
 
-int simplefs_make(char* name, int inodes);
+int simplefs_make(char* name, int blocks_per_inode);
 
 int simplefs_mount(char* name);
 
