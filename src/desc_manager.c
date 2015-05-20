@@ -25,10 +25,9 @@ struct fd_entry
 Tworzy z sciezke 'TMP_DIR/fd.tmp'.
 'filepath' - tablica na finalna sciezke (musi byc odpowiednio duza)
 'fd' - deskryptor pliku (jako nazwa pliku)
-'temporary' - flaga mowiaca czy tworzymy plik na czas przepisywania zawartosci 'fd.tmp'
 Zwraca: utworzony lancuch znakowy: filepath - sukces, NULL - blad
 */
-char * createFilePath(char * filepath, int fd, char temporary)
+char * createFilePath(char * filepath, int fd)
 {
 	char * ptr = filepath; 
 	int c;
@@ -38,16 +37,8 @@ char * createFilePath(char * filepath, int fd, char temporary)
 	if ((c = sprintf(ptr, "%d", fd)) < 0)
 		return NULL;
 	ptr += c;
-	if (temporary)
-	{
-		if (sprintf(ptr, "%s", ".ttmp") < 0)
-			return NULL;
-	}
-	else
-	{
-		if (sprintf(ptr, "%s", ".tmp") < 0)
-			return NULL;
-	}
+	if (sprintf(ptr, "%s", ".tmp") < 0)
+		return NULL;
 	return filepath;
 }
 
@@ -59,60 +50,14 @@ int add_desc(int fd, char mode)
 {
 	// stworz nazwe "fd.tmp":
 	char filename[16];
-	if (createFilePath(filename, fd, 0) == NULL)
+	if (createFilePath(filename, fd) == NULL)
 		return -1;
-
 	// otworz i/lub utworz plik fd.tmp:
-	int filed = open(filename, O_CREAT|O_WRONLY|O_APPEND,
-		S_IRUSR+S_IWUSR+S_IRGRP+S_IWGRP+S_IROTH+S_IWOTH); // tworzy plik, jesli nie istnieje; zapis na koniec pliku
+	int filed = open(filename, O_CREAT|O_RDWR|O_APPEND,
+		S_IRUSR+S_IWUSR+S_IRGRP+S_IWGRP+S_IROTH+S_IWOTH); // tworzy plik, jesli nie istnieje; zapis na koniec pliku, mozna czytac
 	if (filed < 0)
 		return -2;
-	
-	// stworz wpis i wpisz na koniec pliku fd.tmp:
-	struct fd_entry newEntry;
-	newEntry.owner_pid = getpid();;
-	newEntry.rwoffset = 0;
-	newEntry.mode = mode;
-	if (write(filed, &newEntry, sizeof(newEntry)) < 1)
-		return -3;
-	close(filed);
-
-	return 0;
-}
-
-int del_desc(int fd)
-{
-	// stworz nazwe "fd.tmp":
-	char filename[16];
-	if (createFilePath(filename, fd, 0) == NULL)
-		return -1;
-
-	// otworz plik fd.tmp:
-	int filed = open(filename, O_RDONLY);	// read binary: czytanie z pliku, plik musi istniec
-	if (filed < 0)
-		return -2;
-
-	// utworz plik tymczasowy, do ktorego bedziemy przepisywac wpisy:
-	char tmpname[16];
-	if (createFilePath(tmpname, fd, 1) == NULL)
-		return -1;
-	int tmpfiled = open(tmpname, O_CREAT|O_TRUNC|O_WRONLY|O_APPEND,
-		S_IRUSR+S_IWUSR+S_IRGRP+S_IWGRP+S_IROTH+S_IWOTH);	// tworzy plik, jesli nie istnieje; zapis na koniec pliku
-	if (tmpfiled < 0)
-		return -3;
-
-	// ustalamy czy plik 'fd.tmp' zawiera tylko 1 wpis:
-	char oneEntry = 0;
-	off_t pos = lseek(filed, 0, SEEK_END);
-	if (pos < 0)
-	{
-		close(filed);
-		close(tmpfiled);
-		return -1;
-	}
-	else if (pos == sizeof(struct fd_entry))
-		oneEntry = 1;
-	// przepisz zawartosc pliku 'fd.tmp' bez usuwanego wpisu do pliku tymczasowego:
+	// sprawdz, czy juz takiego wpisu nie ma:
 	lseek(filed, 0, SEEK_SET);
 	while (1)
 	{
@@ -125,49 +70,104 @@ int del_desc(int fd)
 		else if (readBytes < sizeof(entry))	// blad
 		{
 			close(filed);
-			return -3;
+			return -4;
+		}
+		if (entry.owner_pid == getpid()) // jest taki wpis
+		{
+			close(filed);
+			return -1;
+		}
+	}
+	// stworz wpis i wpisz na koniec pliku fd.tmp:
+	struct fd_entry newEntry;
+	newEntry.owner_pid = getpid();
+	newEntry.rwoffset = 0;
+	newEntry.mode = mode;
+	if (write(filed, &newEntry, sizeof(newEntry)) < 1)
+		return -3;
+	close(filed);
+
+	return 0;
+}
+
+
+int del_desc(int fd)
+{
+	// stworz nazwe "fd.tmp":
+	char filename[16];
+	if (createFilePath(filename, fd) == NULL)
+		return -1;
+	// otworz plik fd.tmp:
+	int filed = open(filename, O_RDWR);	// read-write: czytanie i pisanie w pliku, musi istniec
+	if (filed < 0)
+		return -2;
+	// ustalamy czy plik 'fd.tmp' zawiera tylko 1 wpis:
+	char oneEntry = 0;
+	off_t filesize = lseek(filed, 0, SEEK_END);
+	if (filesize < 0)
+	{
+		close(filed);
+		return -1;
+	}
+	else if (filesize == sizeof(struct fd_entry))
+		oneEntry = 1;
+	// szukaj wpisu do usuniecia:
+	lseek(filed, 0, SEEK_SET);
+	while (1)
+	{
+		// odczytaj deskryptor:
+		struct fd_entry entry;
+		int readBytes = read(filed, &entry, sizeof(entry));
+		// blad czy end-of-file?
+		if (readBytes == 0)			// eof
+			break;
+		else if (readBytes < sizeof(entry))	// blad
+		{
+			close(filed);
+			return -4;
 		}
 		// jesli wpis do usuniecia jest jedynym => usun plik 'fd.tmp':
 		if (entry.owner_pid == getpid() && oneEntry)
 		{
-			// zamykamy i usuwamy plik tymczasowy:
-			close(tmpfiled);
-			if (remove(tmpname) != 0)
-				return -1;
-			// zamykamy i usuwamy plik 'fd'tmp':
 			close(filed);
 			if (remove(filename) != 0)
 				return -1;
 			return 0;
 		}
-		// jesli to ten do usuniecia -> pomin zapis, w p.p. zapisz do pliku tymczasowego:
-		if (entry.owner_pid != getpid())
+		// jesli kilka wpisow i to ten do usuniecia -> wstaw w jego miejsce ostatni wpis i skroc plik:
+		else if (entry.owner_pid == getpid())
 		{
-			if (write(tmpfiled, &entry, sizeof(entry)) < 1)
+			off_t pos = lseek(filed, 0, SEEK_CUR);	// wczytaj aktualna pozycje kursora
+			// jesli ten wpis nie jest ostatni -> najpierw wpisz na jego miejsce ostatni wpis:
+			if (pos < filesize)
+			{
+				lseek(filed, -sizeof(struct fd_entry), SEEK_END);
+				readBytes = read(filed, &entry, sizeof(entry));
+				lseek(filed, pos - sizeof(struct fd_entry), SEEK_SET);
+				if (write(filed, &entry, sizeof(entry)) < 1)
+					return -3;
+				
+			}
+			// skroc plik:
+			if (ftruncate(filed, filesize - sizeof(struct fd_entry)) < 0)
 			{
 				close(filed);
-				close(tmpfiled);
-				return -4;
+				return -3;
 			}
+			return 0;
 		}
 	}
 	close(filed);
-	close(tmpfiled);
 
-	// usun plik 'fd.tmp' i zmien nazwe tymczasowego na 'fd.tmp':
-	if (remove(filename) != 0)
-		return -1;
-	if (rename(tmpname, filename) != 0)
-		return -1;
-
-	return 0;
+	return -1;
 }
+
 
 int update_desc(int fd, int offset)
 {
 	// stworz nazwe "fd.tmp":
 	char filename[16];
-	if (createFilePath(filename, fd, 0) == NULL)
+	if (createFilePath(filename, fd) == NULL)
 		return -1;
 
 	// otworz plik fd.tmp:
@@ -212,11 +212,12 @@ int update_desc(int fd, int offset)
 	return -1;
 }
 
+
 int get_desc(int fd, int* offset, char* mode)
 {
 	// stworz nazwe "fd.tmp":
 	char filename[16];
-	if (createFilePath(filename, fd, 0) == NULL)
+	if (createFilePath(filename, fd) == NULL)
 		return -1;
 
 	// otworz plik fd.tmp:
@@ -252,11 +253,12 @@ int get_desc(int fd, int* offset, char* mode)
 	return -1;
 }
 
+
 int del_descfile(int fd)
 {
 	// stworz nazwe "fd.tmp":
 	char filename[16];
-	if (createFilePath(filename, fd, 0) == NULL)
+	if (createFilePath(filename, fd) == NULL)
 		return -1;
 	if (remove(filename) != 0)
 		return -1;
