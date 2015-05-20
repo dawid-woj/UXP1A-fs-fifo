@@ -8,7 +8,7 @@ struct fifo_msg
 {
 	int type;		
 	int code;
-	int code_2;
+
 };
 
 //char *initfifo_name = "fifos/initfifo";

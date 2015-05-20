@@ -17,7 +17,7 @@ void frommsg(struct fifo_msg *msg, char *buf);
 int simplefs_mount(char* name);
 int simplefs_umount();
 pid_t init_pid;
-
+int secondproc_pid=-1;
 int initfifo_fd;
 char ret[8];
 char tmpstr[11];
@@ -53,7 +53,7 @@ int simplefs_mount(char* name)
 			sleep(2);
 			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0)
 				continue;
-			printf("# INIT # type: %d code:%d code_2: %d\n", msg.type, msg.code, msg.code_2);
+			printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
 			
 			if(msg.type == LINK)
 			{
@@ -68,50 +68,55 @@ int simplefs_mount(char* name)
 					wr_pid = msg.code;
 					printf("kolejka do pisania inita:\n %s\n",wr_fifoname);
 					wrfifo_fd = open(wr_fifoname, O_WRONLY);
-					msg.code_2=-1;
 					write(wrfifo_fd, (char*)&msg, sizeof(msg));
-
+					
 					msg.type=TOKEN;
 					msg.code=99999;
-					msg.code_2=99999;
 					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 				else
 				{
+					if(secondproc_pid == -1)
+						secondproc_pid = msg.code;
 					printf("# INIT #: LINK pid:%d\n",msg.code);
 					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
 			else if(msg.type == UNLINK)
 			{
-				if(msg.code == wr_pid)
+				if(msg.code == -1 && secondproc_pid != -1)
 				{
-					printf("# INIT #: UNLINK pid:%d - nastepny po init\n",msg.code);
-					struct fifo_msg tmpmsg = msg;		
-					write(wrfifo_fd, (char*)&msg, sizeof(msg));
-					close(wrfifo_fd);
-					if(tmpmsg.code_2 == -1)
-					{
-						printf("nastepnik odlaczanego to init: %d\n", tmpmsg.code_2);
-						wr_pid = -1;
-						wrfifo_fd = -1;
-					}		
-					else	
-					{	
-						printf("nastepnik odlaczanego: %d\n", tmpmsg.code_2);
-						char tmpfifoname[63] = "fifo";
-						const char *tmpstr = itoa(tmpmsg.code_2);
-						wr_fifoname = strcat(tmpfifoname, tmpstr);
-						wrfifo_fd = open(tmpfifoname, O_WRONLY);
-						wr_pid = tmpmsg.code_2;
-						
-					}
+					msg.code = secondproc_pid;
 				}
-				else
+				printf("# INIT #: UNLINK pid:%d 1-\n",msg.code);
+							
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				close(wrfifo_fd);
+					
+				printf("# INIT #: UNLINK pid:%d 2-\n",msg.code);
+				struct fifo_msg tmpmsg = msg;
+				if(tmpmsg.code == -1)
 				{
-					printf("# INIT #: UNLINK pid:%d\n",msg.code);
-					write(wrfifo_fd, (char*)&msg, sizeof(msg));
+					
+					
+					printf("nastepnik odlaczanego to init: %d\n", tmpmsg.code);
+					wr_pid = -1;
+					wrfifo_fd = -1;
+					secondproc_pid = -1;
+				}		
+				else	
+				{	
+					if(secondproc_pid == tmpmsg.code)
+						secondproc_pid = -1;
+					printf("nastepnik odlaczanego: %d\n", tmpmsg.code);
+					char tmpfifoname[63] = "fifo";
+					const char *tmpstr = itoa(tmpmsg.code);
+					wr_fifoname = strcat(tmpfifoname, tmpstr);
+					wrfifo_fd = open(tmpfifoname, O_WRONLY);
+					wr_pid = tmpmsg.code;
+					
 				}
+				
 			}
 			else if(msg.type == TOKEN)
 			{
