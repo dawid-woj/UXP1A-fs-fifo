@@ -2,10 +2,10 @@
 CC = gcc
 
 # define any compile-time flags
-CFLAGS = -Wall -g -pthread
+CFLAGS = -Wall -g
 
 # define any directories containing header files other than /usr/include
-INCLUDES = -I/home/newhall/include  -I../include #tutaj wrzucamy headery po spacji
+# INCLUDES = -I/home/newhall/include  -I../include #tutaj wrzucamy headery po spacji
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
@@ -17,7 +17,8 @@ INCLUDES = -I/home/newhall/include  -I../include #tutaj wrzucamy headery po spac
 #LIBS = -lmylib -lm
 
 # define the C source files
-SRCS = # tutaj leca pliki .c, .cc, .cpp
+# tutaj leca pliki .c, .cc, .cpp
+SRCS = desc_manager.c fifo_mutex.c main.c sfs_vd.c simplefs.c sf_test.c
 
 # define the C object files 
 #
@@ -40,16 +41,75 @@ MAIN = ../bin/main
 
 all:    $(MAIN)
 	@echo  Project has been compiled
+	
+build: $(MAIN)
+	@echo Project has been built
+	
+rebuild: clean $(MAIN)
+	@echo Project has been rebuilt
+
+test: 
+	$(MAIN)
 
 $(MAIN): $(OBJS) 
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(MAIN) $(OBJS)  
+# $(LFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
 # the rule(a .c file) and $@: the name of the target of the rule (a .o file) 
 # (see the gnu make manual section about automatic variables)
-.c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+#.c.o:
+#	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM) *.o *~ $(MAIN)
+	$(RM) *.o
+	
+delbin:
+	$(RM) *~ $(MAIN)
+	
+cleanall: clean delbin
+
+main.o: main.c
+	$(CC) $(CFLAGS) -c -o main.o main.c
+	
+desc_manager.o: desc_manager.c desc_manager.h
+	$(CC) $(CFLAGS) -c -o desc_manager.o desc_manager.c
+
+fifo_mutex.o: fifo_mutex.c fifo_mutex.h
+	$(CC) $(CFLAGS) -c -o fifo_mutex.o fifo_mutex.c
+	
+sfs_vd.o: sfs_vd.c sfs_vd.h
+	$(CC) $(CFLAGS) -c -o sfs_vd.o sfs_vd.c
+	
+simplefs.o: simplefs.c simplefs.h
+	$(CC) $(CFLAGS) -c -o simplefs.o simplefs.c
+	
+sf_test.o: sf_test.c sf_test.h
+	$(CC) $(CFLAGS) -c -o sf_test.o sf_test.c
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
