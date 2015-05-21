@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #include "const.h"
 
@@ -17,28 +18,35 @@ void frommsg(struct fifo_msg *msg, char *buf);
 int simplefs_mount(char* name);
 int simplefs_umount();
 pid_t init_pid;
-int secondproc_pid=-1;
-int initfifo_fd;
 char ret[8];
-char tmpstr[11];
+
 int main(int argc, char *argv[])
 {
 	simplefs_mount("sfsfile");
-	puts("tworze fifo, nacisnij przycisk aby usunac");
-	getchar();
+	puts("tworze fifo");
+	//getchar();
+	/*tu jest słabo z testowaniem bo proces dziecko wypisuje na ekran i getchar nie reaguje*/
+	sleep(13);
+	puts("usuwam");
 	simplefs_umount();
+	return 0;
 }
 
 
 
 int simplefs_mount(char* name)
 {
-	
-	/*init_pid = fork();
+
+	init_pid = fork();
 	if(init_pid == 0)
-	{	*/
+	{
+		int secondproc_pid=-1;
+		int initfifo_fd;
+		
+		//char tmpstr[11];
+		int unmount_state=0;		
+			
 		struct fifo_msg msg;
-		int tmp_fd=0;
 		int wrfifo_fd=-1;
 		char *wr_fifoname;
 		int wr_pid = -1;
@@ -57,8 +65,20 @@ int simplefs_mount(char* name)
 			
 			if(msg.type == LINK)
 			{
-				
-				if(wrfifo_fd == -1)
+				if(unmount_state == 1)
+				{
+					printf("# INIT #: LINK pid:%d - w stanie unmount\n",msg.code);
+					char tmpfifoname[80] = "fifo";
+					const char *tmpstr = itoa(msg.code);
+					char *temp_fifoname = strcat(tmpfifoname, tmpstr);
+					printf("# INIT #: odmawia LINK pid: %d\n", msg.code);
+					int tmpfifo_fd = open(temp_fifoname, O_WRONLY);
+					msg.type = UNMOUNT_EXECUTE;
+					msg.code = 0;
+					write(tmpfifo_fd, (char*)&msg, sizeof(msg));
+					close(tmpfifo_fd);
+				}
+				else if(wrfifo_fd == -1)
 				{
 					printf("# INIT #: LINK pid:%d - pierwszy za init\n",msg.code);
 					//char tmpfifoname[80] = "fifos/fifo";
@@ -82,7 +102,7 @@ int simplefs_mount(char* name)
 					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
-			else if(msg.type == UNLINK)
+			else if(msg.type == UNLINK && unmount_state == 0)
 			{
 				if(msg.code == -1 && secondproc_pid != -1)
 				{
@@ -118,24 +138,50 @@ int simplefs_mount(char* name)
 				}
 				
 			}
-			else if(msg.type == TOKEN)
+			else if(msg.type == TOKEN && unmount_state == 0)
 			{
 				printf("# INIT #: TOKEN \n");
-				if(wr_pid != -1)
+				if(wr_pid != -1 && unmount_state == 0)
 				{
 					write(wrfifo_fd, (char*)&msg, sizeof(msg));
 				}
 			}
+			else if(msg.type == UNMOUNT_PREPARE)
+			{
+				printf("# INIT #: UNMOUNT_PREPARE \n");
+				unmount_state = 1;
+				msg.type = UNMOUNT_EXECUTE;
+				msg.code = 0;
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				close(wrfifo_fd);
+				unlink(initfifo_name);
+			}
+			else if(msg.type == UNMOUNT_EXECUTE)
+			{
+				printf("# INIT #: UNMOUNT_EXECUTE - konczy sie init \n");
+				close(initfifo_fd);
+				
+				exit(0);
+			}
 		}
-		puts("wyszedlem z while");
 		
-	//}
+	}
+	return 0;
 }
 int simplefs_umount()
 {
-	unlink(initfifo_name);
+	/*unlink(initfifo_name);
 	close(initfifo_fd);
-	kill(init_pid, SIGKILL);
+	kill(init_pid, SIGKILL);*/
+	struct fifo_msg msg;
+	int tmpfifo_fd = open(initfifo_name, O_WRONLY);
+	msg.type = UNMOUNT_PREPARE;
+	msg.code = 0;
+	write(tmpfifo_fd, (char*)&msg, sizeof(msg));
+	close(tmpfifo_fd);
+	int status;
+	waitpid(init_pid, &status, 0);//WUNTRACED);
+	return 0;
 }
 /*sam to cholerstwo napisałem, ale dziala jak cos*/
 char *itoa(int number)

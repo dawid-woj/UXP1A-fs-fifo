@@ -52,6 +52,14 @@ int fifomutex_lock()
 	mkfifo(myfifo_name, 0666);
 	
 	wrfifo_fd = open(initfifo_name, O_WRONLY);
+	if(wrfifo_fd == -1)
+	{
+		printf("Proces pid: %d - kolejka fifo nie istnieje\n",mypid);
+		close(wrfifo_fd);
+		close(myfifo_fd);
+		unlink(myfifo_name);
+		exit(-1);
+	}
 	printf("Proces %d, pisze do: %s\n", mypid, initfifo_name);
 	msg.type=LINK;
 	msg.code=mypid;
@@ -138,12 +146,20 @@ int fifomutex_lock()
 			write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}	*/	
 		}
+		else if(msg.type == UNMOUNT_EXECUTE)
+		{
+			printf("Proces %d, UNMOUNT_EXECUTE\n", mypid);
+			write(wrfifo_fd, (char*)&msg, sizeof(msg));	
+			close(wrfifo_fd);
+			close(myfifo_fd);	
+			unlink(myfifo_name);
+			return -1;
+		}
 	}
 }
 int fifomutex_unlock()
 {	
 	struct fifo_msg unlinkmsg;
-	char tmpstr2[11];
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = nextproc_pid;
 	write(wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
@@ -194,10 +210,6 @@ int fifomutex_unlock()
 				
 				return(0);
 			}
-			/*else if(msg.code == -1 && nextproc_pid == -1)
-			{
-				msg.code = mypid;
-			}*/
 			else
 			{
 				printf("Proces %d, UNLINK pid:%d\n", mypid, msg.code);
@@ -209,6 +221,15 @@ int fifomutex_unlock()
 		{
 			/*to sie nie moze zdarzyc ale daja na wszelki wypadek*/
 			write(wrfifo_fd, (char*)&msg, sizeof(msg));		
+		}
+		else if(msg.type == UNMOUNT_EXECUTE)
+		{
+			printf("Proces %d, UNMOUNT_EXECUTE\n", mypid);
+			write(wrfifo_fd, (char*)&msg, sizeof(msg));	
+			close(wrfifo_fd);
+			close(myfifo_fd);	
+			unlink(myfifo_name);
+			return -1;
 		}
 	}
 

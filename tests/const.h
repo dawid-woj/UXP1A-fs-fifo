@@ -3,6 +3,8 @@
 #define TOKEN 3
 #define ERROR 4
 #define UNMOUNT 5
+#define UNMOUNT_PREPARE 6
+#define UNMOUNT_EXECUTE 7
 
 struct fifo_msg
 {
