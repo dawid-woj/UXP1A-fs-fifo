@@ -5,6 +5,7 @@
 #define UNMOUNT 5
 #define UNMOUNT_PREPARE 6
 #define UNMOUNT_EXECUTE 7
+#define NO_WRITERS 8
 
 struct fifo_msg
 {

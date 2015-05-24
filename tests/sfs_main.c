@@ -20,15 +20,18 @@ int simplefs_umount();
 pid_t init_pid;
 char ret[8];
 
+
+
 int main(int argc, char *argv[])
 {
+	signal(SIGPIPE, SIG_IGN);
 	simplefs_mount("sfsfile");
 	puts("tworze fifo");
 	//getchar();
 	/*tu jest słabo z testowaniem bo proces dziecko wypisuje na ekran i getchar nie reaguje*/
-	sleep(13);
+	//sleep(13);
 	puts("usuwam");
-	simplefs_umount();
+	//simplefs_umount();
 	return 0;
 }
 
@@ -59,8 +62,17 @@ int simplefs_mount(char* name)
 		{
 			
 			sleep(2);
-			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0)
-				continue;
+			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
+			{
+				struct fifo_msg tmp;
+				tmp.type = NO_WRITERS;
+				tmp.code = -1;
+				write(wrfifo_fd, (char*)&tmp, sizeof(tmp));
+				close(wrfifo_fd);
+				//close(initfifo_fd);
+				//unlink(initfifo_name);
+				return -1;
+			}
 			printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
 			
 			if(msg.type == LINK)
@@ -162,6 +174,14 @@ int simplefs_mount(char* name)
 				close(initfifo_fd);
 				
 				exit(0);
+			}
+			else if(msg.type == NO_WRITERS)
+			{
+				wr_pid = -1;
+				wrfifo_fd = -1;
+				secondproc_pid = -1;
+				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				close(wrfifo_fd);
 			}
 		}
 		
