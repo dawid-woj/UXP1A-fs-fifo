@@ -353,23 +353,25 @@ void debug__print_inode(struct inode* inod)
 
 /* Funkcja testowa
  * Drukuje zawartosc bloku danych na stdout (w postaci znakowej)
- * W celu poprawienia czytelnosci bajt o wartosci 0 jest reprezentowany przez znak '-'
+ * Paramter range okresla liczbe bajtow do wypisania
  */
-void debug__print_block(unsigned short blockid)
+void debug__print_block(unsigned short blockid, int range)
 {
   int i;
   char data[SFS_BLOCK_SIZE];
   
   read_from_block(blockid, 0, data, SFS_BLOCK_SIZE);
+  range = (range > SFS_BLOCK_SIZE) ? SFS_BLOCK_SIZE : range;
   
   printf("Blockinfo\n");
-  for(i = 0; i < SFS_BLOCK_SIZE; ++i)
+  for(i = 0; i < range; ++i)
   {
-    if (data[i]) 
-      printf("%c ", data[i]);
+    if (data[i] & 0xF0) 
+      printf("%hhX ", data[i]);
     else
-      printf("- ");
-    if(i%64 == 63) printf("\n");
+      printf("0%hhX ", data[i]);
+      //printf("- ");
+    if(i%32 == 31) printf("\n");
     else if(i%8 == 7) printf(" ");
   }
 }

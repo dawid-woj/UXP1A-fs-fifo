@@ -1,14 +1,17 @@
 #ifndef SFS_VD_H_
 #define SFS_VD_H_
 
-#define SFS_LINK_NAME	"/tmp/sfsfile"	// Nazwa twardego dowiazania do pliku SFS
-#define	SFS_BLOCK_SIZE	4096	// Rozmiar bloku danych w bajtach
-#define SFS_FILE	0	// Plik zwykly
-#define SFS_DIRECTORY	1	// Katalog
-#define SFS_NO_BLOCK	0 	// Wartosc sygnalizujaca brak wolnych blokow
-#define SFS_NO_INODE	-1	// Wartosc sygnalizujaca brak wolnych inodow
-#define	SFS_ROOT_INODE	0	// Nr inoda katalogu root
-#define	SFS_ROOT_BLOCK	0	// Nr bloku katalogu root
+#define SFS_LINK_NAME		"/tmp/sfsfile"	// Nazwa twardego dowiazania do pliku SFS
+#define	SFS_BLOCK_SIZE		4096	// Rozmiar bloku danych w bajtach
+#define SFS_FILE		1	// Plik zwykly
+#define SFS_DIRECTORY		2	// Katalog
+#define SFS_NO_BLOCK		0 	// Wartosc sygnalizujaca brak wolnych blokow
+#define SFS_NO_INODE		-1	// Wartosc sygnalizujaca brak wolnych inodow
+#define	SFS_ROOT_INODE		0	// Nr inoda katalogu root
+#define	SFS_ROOT_BLOCK		0	// Nr bloku katalogu root
+#define SFS_DIRECT_BLOCKS	7	// Liczba blokow danych adresowanych bezposrednio
+#define SFS_INDIRECT_BLOCKS	2048	// Liczba blokow danych adresowanych posrednio
+#define SFS_INDIRECT_POINTER	7	// Indeks wskaznika do blokow adresowanych bezposrednio
 
 // Kody bledow:
 #define SFSVD_EOPEN	-1	// Blad otwarcia pliku SFS
@@ -134,9 +137,9 @@ void debug__analyse_sfsfile(char* filename);
 void debug__print_inode(struct inode* inod);
 
 /* Funkcja testowa
- * Drukuje zawartosc bloku danych na stdout (w postaci znakowej)
- * W celu poprawienia czytelnosci bajt o wartosci 0 jest reprezentowany przez znak '-'
+ * Drukuje zawartosc bloku danych na stdout (w postaci hex)
+ * Paramter range okresla liczbe bajtow do wypisania
  */
-void debug__print_block(unsigned short blockid);
+void debug__print_block(unsigned short blockid, int range);
 
 #endif
