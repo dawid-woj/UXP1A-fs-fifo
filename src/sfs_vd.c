@@ -88,7 +88,7 @@ int create_sfsfile(char* name, int blocks_per_inode)
   
   // Zapisanie inoda roota
   rootnode.filetype = SFS_DIRECTORY;
-  rootnode.mode = SFS_RDWR;
+  rootnode.mode = SFS_RDONLY;
   rootnode.nblocks = 1;
   rootnode.filesize = SFS_BLOCK_SIZE; // Rozmiar katalogu to jeden blok (???)
   rootnode.blocks[0] = SFS_ROOT_BLOCK;
@@ -363,7 +363,7 @@ void debug__print_block(unsigned short blockid, int range)
   read_from_block(blockid, 0, data, SFS_BLOCK_SIZE);
   range = (range > SFS_BLOCK_SIZE) ? SFS_BLOCK_SIZE : range;
   
-  printf("Blockinfo\n");
+  printf("Blockinfo %uhd\n", blockid);
   for(i = 0; i < range; ++i)
   {
     if (data[i] & 0xF0) 

@@ -78,7 +78,7 @@ void del_from_dir(struct directory* dir);
 int find_in_directory(int dirinodeid, char* name, char type, struct directory* dir);
 
 /***********************************************************************************************************************************************
- * GET OBJECTS INODE AND DIRECTORY
+ * LOOKUP
  * Poszukuje obiektu wskazywanego przez sciezke path o typie type
  * W strukturze dir zapisuje zawartosc katalogu zawierajacego szukany obiekt, ustawiajac pole found_object_position na indeks znalezionego obiektu
  * Wartosc wskazywana przez namepointer zostaje ustawiona tak aby wskazywala koncowy obiekt sciezki
@@ -88,7 +88,7 @@ int find_in_directory(int dirinodeid, char* name, char type, struct directory* d
  * SFS_NOT_FOUND - nie znaleiono obiektu koncowego
  * SFS_BAD_NAME - pusta nazwa koncowego obiektu
  ***********************************************************************************************************************************************/
-int get_objects_inode_and_directory(char* path, char** namepointer, int type, struct directory* dir);
+int lookup(char* path, char** namepointer, int type, struct directory* dir);
 
 /***********************************************************************************************************************************************
  * DELETE FILE

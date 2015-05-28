@@ -23,10 +23,11 @@
 #define SFS_EDESC		-8	// Blad pliku tymczasowgo pliku dekskryptora, Uwaga! Jesli plik byl tworzony, to udalo sie go stworzyc, ale nie otworzyc
 #define SFS_EOPENED		-9	// Plik jest juz otwarty
 #define SFS_EEXISTS		-10	// Plik/katalog juz istnieje
-#define SFS_NOSPACE		-11	// Brak miejsca na wirtualnym dysku
+#define SFS_NOSPACE		-11	// Brak miejsca na wirtualnym dysku (nie ma wolnych blokow)
 #define SFS_ECLOSED		-12	// Plik zamkniety
 #define SFS_BAD_OPTION		-13	// Niepoprawny argument
 #define SFS_BAD_DESC		-14	// Niepoprawny deskryptor pliku
+#define SFS_VDFAULT		-15	// Blad dostepu do pliku zawierajacego sfs
 
 int simplefs_make(char* name, int blocks_per_inode);
 

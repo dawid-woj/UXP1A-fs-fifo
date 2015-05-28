@@ -18,7 +18,7 @@ CFLAGS = -Wall -g
 
 # define the C source files
 # tutaj leca pliki .c, .cc, .cpp
-SRCS = desc_manager.c fifo_mutex.c main.c sfs_vd.c simplefs.c simplefs_aux.c sf_test.c
+SRCS = desc_manager.c fifo_mutex.c main.c sfs_ops.c sfs_vd.c simplefs.c simplefs_aux.c sf_test.c
 
 # define the C object files 
 #
@@ -78,6 +78,9 @@ desc_manager.o: desc_manager.c desc_manager.h
 
 fifo_mutex.o: fifo_mutex.c fifo_mutex.h
 	$(CC) $(CFLAGS) -c -o fifo_mutex.o fifo_mutex.c
+
+sfs_ops.o: sfs_ops.c sfs_ops.h
+	$(CC) $(CFLAGS) -c -o sfs_ops.o sfs_ops.c
 	
 sfs_vd.o: sfs_vd.c sfs_vd.h
 	$(CC) $(CFLAGS) -c -o sfs_vd.o sfs_vd.c
