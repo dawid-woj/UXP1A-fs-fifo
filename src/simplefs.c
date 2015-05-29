@@ -51,7 +51,7 @@ int simplefs_make(char* name, int blocks_per_inode)
  ***********************************************************************************************************************************************/
 int simplefs_mount(char* name)
 {
-  // Utworzenie fsinit
+  fifomutex_startinit();
   link(name, SFS_LINK_NAME); // @todo: warunkowe tworzenie hardlinka (tylko jesli udalo sie utworzyc fsinit)
   return 0;
 }
@@ -66,8 +66,7 @@ int simplefs_mount(char* name)
  ***********************************************************************************************************************************************/
 int simplefs_umount(void)
 {
-  // Zakonczenie fsinit
-  // fifomutex_unmount();
+  fifomutex_umount();
   unlink(SFS_LINK_NAME); // Usuniecie hardlinka
   return 0;
 }
@@ -92,14 +91,15 @@ int simplefs_open(char *name, int mode)
   {
     return SFS_BAD_OPTION;
   }
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0) 
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_open(name, mode);	// Otwieranie pliku
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   
   return status; 			// Inode znalezionego pliku lub kod bledu
 }
@@ -114,14 +114,15 @@ int simplefs_unlink(char *name)
 {
   int status;
 
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0)
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_unlink(name);		// Usuwanie pliku/katalogu
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;
 }
 
@@ -135,14 +136,15 @@ int simplefs_mkdir(char *name)
 {
 int status;
 
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0)
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_mkdir(name);		// Tworzenie katalogu
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;
 }
 
@@ -175,14 +177,15 @@ int simplefs_read(int fd, char *buf, int len)
   {
     return SFS_BAD_DESC;		// Niepoprawny deskryptor
   }
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0)
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_read(fd, buf, len);	// Odczyt
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;			// Liczba odczytanych bajtow lub kod bledu
 }
 
@@ -200,14 +203,15 @@ int simplefs_write(int fd, char *buf, int len)
   {
     return SFS_BAD_DESC;		// Niepoprawny deskryptor
   }
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0)
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_write(fd, buf, len);	// Zapis
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;			// Liczba zapisanych bajtow lub kod bledu
 }
 
@@ -229,14 +233,15 @@ int simplefs_lseek(int fd, int whence, int offset)
   {
     return SFS_BAD_DESC;		// Niepoprawny deskryptor
   }
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
   if (open_sfsfile() < 0)
   {
     return SFS_VDFAULT; 		// Blad dostepu do pliku sfs 
   }
   status = sfsop_lseek(fd, whence, offset);	// Ustalenie nowej pozycji w pliku
   close_sfsfile();
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;			// Nowa pozycja odczytu/zapisu lub kod bledu
 }
 
@@ -254,10 +259,11 @@ int simplefs_close(int fd)
   {
     return SFS_BAD_DESC;		// Niepoprawny deskryptor
   }
-  // fifomutex_lock();
+  struct proc_data data;
+  fifomutex_lock(&data);
 
   status = sfsop_close(fd);		// Ustalenie nowej pozycji w pliku
-  //fifomutex_unlock();
+  fifomutex_unlock(&data);
   return status;			// Nowa pozycja odczytu/zapisu lub kod bledu
 }
 /***********************************************************************************************************************************************

@@ -39,7 +39,7 @@ MAIN = ../bin/main
 
 .PHONY: clean
 
-all:    $(MAIN)
+all:    $(MAIN) INIT
 	@echo  Project has been compiled
 	
 build: $(MAIN)
@@ -93,29 +93,14 @@ simplefs_aux.o: simplefs_aux.c simplefs_aux.h
 	
 sf_test.o: sf_test.c sf_test.h
 	$(CC) $(CFLAGS) -c -o sf_test.o sf_test.c
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+INIT: simplefs_init.c fifo_mutex.h
+	$(CC) $(CFLAGS) -c -o simplefs_init simplefs_init.c	
+
+
+
+
+
+
+
+
