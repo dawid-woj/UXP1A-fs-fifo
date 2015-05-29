@@ -1,7 +1,5 @@
 #include "fifo_mutex.h"
 
-
-
 /***************************************************************************
  * Wewnetrzne struktury danych
  **************************************************************************/
@@ -10,6 +8,22 @@ char *initfifo_name = "initfifo";
 
 /***************************************************************************
  * API modulu
+ **************************************************************************/
+
+/***************************************************************************
+ * FIFOMUTEX_LOCK
+ * daje dostep do sekcji krytycznej
+ * Parametry:
+ * data - struktura z danymi potrzebnymi do obsllugi dzialania pierscienia
+ *  z fifo, -- glownym jej celem jest zapamietanie danych pomiedzy wywolaniem
+ *  lock() i unlock()
+ * Zwraca:
+ * 0 - wszystko sie udalo, teraz proces ma wylaczny dostep do systemu
+ * -1 - proces zostal zakonczony wywolaniem f-cji fifomutex_unmount()
+ * -2 - proces zostal zakonczony z powodu bledu odczytu
+ *
+ * Wazne: kazdy proces wywolujacy ta funckje musi zablokowac sygnal SIG_PIPE:
+ *  signal(SIGPIPE, SIG_IGN);
  **************************************************************************/
 
 int fifomutex_lock(struct proc_data *data)
@@ -41,7 +55,7 @@ int fifomutex_lock(struct proc_data *data)
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
 			no_writers_error(data, mypid);
-			return -1;
+			return -2;
 		}
 		printf("Proces %d, type: %d code:%d\n", mypid, msg.type, msg.code);
 		if(msg.type == LINK)
@@ -89,10 +103,27 @@ int fifomutex_lock(struct proc_data *data)
 		else if(msg.type == NO_WRITERS)
 		{
 			no_writers_error(data, mypid); /*przyszedł błąd krytyczny - muszę się podłączyć ponownie*/
-			return -1;
+			return -2;
 		}
 	}
 }
+
+
+/***************************************************************************
+ * FIFOMUTEX_UNLOCK
+ * zwalnia dostep do sekcji krytycznej
+ * Parametry:
+ * data - struktura z danymi potrzebnymi do obslugi dzialania pierscienia
+ *  z fifo; Musi to byc dokladnie ta sama struktura z ktora wywolalismy
+ *  lock(), inaczej operacja sie nie powiedzie
+ * Zwraca:
+ * 0 - wszystko sie udalo, teraz proces ma wylaczny dostep do systemu
+ * -1 - proces zostal zakonczony wywolaniem f-cji fifomutex_unmount()
+ * -2 - proces zostal zakonczony z powodu bledu odczytu
+ *
+ * Wazne: kazdy proces wywolujacy ta funckje musi zablokowac sygnal SIG_PIPE:
+ *  signal(SIGPIPE, SIG_IGN);
+ **************************************************************************/
 int fifomutex_unlock(struct proc_data *data)
 {	
 	int mypid = getpid();
@@ -110,7 +141,7 @@ int fifomutex_unlock(struct proc_data *data)
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0)
 		{
 			no_writers_error(data, mypid);
-			return -1;
+			return -2;
 		}
 		printf("Proces %d, type: %d code:%d\n", mypid, msg.type, msg.code);
 		if(msg.type == LINK)
@@ -156,7 +187,7 @@ int fifomutex_unlock(struct proc_data *data)
 		else if(msg.type == NO_WRITERS)
 		{
 			no_writers_error(data, mypid);
-			return -1;
+			return -2;
 		}
 	}
 }
@@ -218,16 +249,39 @@ void initialize(struct proc_data *data, int mypid)
 	
 }
 
+
+/***************************************************************************
+ * FIFOMUTEX_STARTINIT
+ * tworzy proces init
+ * Parametry:
+ * 
+ * Zwraca:
+ * 0 - wszystko sie udalo
+ * -1 - proces nie zostal utworzony
+ **************************************************************************/
 int fifomutex_startinit()
 {
 
 	init_pid = fork();
+	int ret = 0;			/*exec przy udanej operacji nie zwraca nic
+					, przy bledzie -1*/
 	if(init_pid == 0)
 	{
-		execl("./simplefs_init", "simplefs_init", (char*)0);
+		ret = execl("./simplefs_init", "simplefs_init", (char*)0);
 	}
-	return 0;
+	return ret;
 }
+
+/***************************************************************************
+ * FIFOMUTEX_UMOUNT
+ * powoduje usuniecie kolejek pierscienia, zakonczenie procesu init
+ * Wazne: czeka az init sie zakonczy
+ * Parametry:
+ * 
+ * Zwraca:
+ * 0 - wszystko sie udalo
+ * tu musze jeszcze dopracowac
+ **************************************************************************/
 int fifomutex_umount()
 {
 	struct fifo_msg msg;
