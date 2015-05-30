@@ -35,10 +35,8 @@ struct inode
  * Aby korzystac z funkcjonalnosci modulu nalezy najpierw otworzyc plik sfs za pomoca open_sfsfile()/create_sfsfile(),
  * co zapewnia odswiezenie kopii superbloku i map bitowych w pamieci programu,
  * a po zakonczeniu pracy wywolac close_sfsfile() w celu zatwierdzenia zmian w superbloku i mapach bitowych.
- * Podobnie jest z funkcjami testowymi, poza debug__analyse_sfsfile().
+ * Niedotyczny to funkcji testowych, ktore robia to we wlasnym zakresie.
  * Generalnie funkcje modulu nie sprawdzaja poprawnosci podawanych im parametrow.
- * Np. wywolanie read_from_block() z argumentem offset > SFS_BLOCK_SIZE zakonczy sie porazka.
- * Nalezy miec to na uwadze w celu unikniecia katastrofy.
  *********************************************************************************************************************/
 
 //----------------------------- API MODULU -----------------------------//
@@ -87,7 +85,7 @@ void set_inode(int inodeid, struct inode* inod);
 
 /* Zajcie bloku danych
  * Funkcja odnajduje pierwszy wolny blok na mapie blokow, oznacza go jako zajety i aktualizuje superblok
- * Zwaraca:
+ * Zwraca:
  * Indeks zarezerwowanego bloku lub SFS_NO_BLOCK w przypadku braku wolnych blokow
  */
 unsigned short reserve_block(void);
@@ -132,9 +130,9 @@ int write_to_block(unsigned short blockid, int offset, char* buf, int nbytes);
 void debug__analyse_sfsfile(char* filename);
 
 /* Funkcja testowa
- * Drukuje zawartosc inoda na stdout
+ * Drukuje zawartosc inoda o nr inodeid na stdout
  */
-void debug__print_inode(struct inode* inod);
+void debug__print_used_inodes(void);
 
 /* Funkcja testowa
  * Drukuje zawartosc bloku danych na stdout (w postaci hex)

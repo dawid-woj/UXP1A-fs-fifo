@@ -3,6 +3,7 @@
 #include "sfs_vd.h"
 #include "desc_manager.h"
 #include <string.h>
+#include <stdio.h>
 
 /***********************************************************************************************************************************************
  * OPEN DIR
@@ -106,6 +107,9 @@ int lookup(char* path, char** namepointer, int type, struct directory* dir)
   int dirnodeid = SFS_ROOT_INODE;
   int status = SEARCHING;
   
+  dir->head.own_inode = SFS_ROOT_INODE;
+  dir->head.parent_dir = SFS_ROOT_INODE;
+  
   while(status == SEARCHING)
   { 
     *namepointer = pathpointer;
@@ -133,7 +137,15 @@ int lookup(char* path, char** namepointer, int type, struct directory* dir)
       return SFS_NAME_TO_LONG;
     }
     name[i] = 0;
-    if(status == PATHS_END) // Jestesmy w finalnym katalogu - poszukujemy obiektu koncowego
+    if(strcmp(name, "..") == 0)
+    {
+      dirnodeid = dir->head.parent_dir;
+    }
+    else if(strcmp(name, ".") == 0)
+    {
+      dirnodeid = dir->head.own_inode;
+    }
+    else if(status == PATHS_END) // Jestesmy w finalnym katalogu - poszukujemy obiektu koncowego
     {
       return find_in_directory(dirnodeid, name, type, dir);
     }
@@ -212,3 +224,79 @@ void delete_directory(int dirinodeid)
   free_block(dir.data_block); // Zwolnienie bloku danych katalogu
   free_inode(dir.head.own_inode); // Zwolnienie wlasnego inoda
 }
+
+/***************************************************************************
+ * Funkcje diagnostyczne
+ **************************************************************************/
+
+/***********************************************************************************************************************************************
+ * DEBUG LIST DIR
+ * Wypisuje zawartosc podanego katalogu na stdout
+ ***********************************************************************************************************************************************/
+
+void debug__list_dir(char* path)
+{
+  int dirnodeid, i;
+  char* garbage;
+  struct directory dir;
+  
+  open_sfsfile();
+  
+  printf("Dirinfo: %s\n", path);
+  
+  if(*path == 0) // Odwolanie do katalogu root
+  {
+    dirnodeid = SFS_ROOT_INODE;
+  }
+  else
+  {
+    dirnodeid = lookup(path, &garbage, SFS_DIRECTORY, &dir);
+  }
+  
+  if(dirnodeid < 0)
+  {
+    printf("Directory not found\n");
+    return;
+  }
+  
+  open_dir(dirnodeid, &dir);
+  
+  printf("#\tnode\ttype\tname\n");
+  printf("-\t%d\t%hhX\t.\n", dir.head.own_inode, SFS_DIRECTORY);
+  printf("-\t%d\t%hhX\t..\n", dir.head.parent_dir, SFS_DIRECTORY);
+  
+  for(i = 0; i < dir.head.entries; ++i)
+  {
+    printf("%d\t%d\t%hhX\t%s\n", i, dir.entries[i].inode_number, dir.entries[i].type, dir.entries[i].filename);
+  }
+  
+  close_sfsfile();
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

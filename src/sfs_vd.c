@@ -320,7 +320,7 @@ void debug__analyse_sfsfile(char* filename)
   {
     read(sfsfd, &c, 1);
     printf("%hhX\t", c);
-    if(i%8 == 7) printf("\n");
+    if(i%16 == 15) printf("\n");
   }
   printf("Inode map:\n");
   lseek(sfsfd, sblock.inode_map_offset, SEEK_SET);
@@ -328,27 +328,44 @@ void debug__analyse_sfsfile(char* filename)
   {
     read(sfsfd, &c, 1);
     printf("%hhX\t", c);
-    if(i%8 == 7) printf("\n");
+    if(i%16 == 15) printf("\n");
   }
   close(sfsfd);
 }
 
 /* Funkcja testowa
- * Drukuje zawartosc inoda na stdout
+ * Drukuje zawartosc zajetych inodow na stdout
  */
-void debug__print_inode(struct inode* inod)
+void debug__print_used_inodes(void)
 {
-  int i;
-  printf("Inodeinfo\n");
-  printf("type:           %hhX\n", inod->filetype);
-  printf("mode:           %hhX\n", inod->mode);
-  printf("nblocks:        %hu\n", inod->nblocks);
-  printf("filesize:       %u\n", inod->filesize);
+  int i,j;
+  int inode_map_size = sblock.all_inodes / 8;
+  struct inode inod;
   
-  for(i = 0; i < 8; ++i)
+  open_sfsfile();
+  
+  printf("Inodes in use:\nID\ttype\tmode\tnblk\tsize\tblk0\tblk1\tblk2\tblk3\tblk4\tblk5\tblk6\tblkp\n");
+  
+  for(i  = 0; i < inode_map_size; ++i) // Petla po bajtach bitmapy
   {
-    printf("datablock id: %hu\n", inod->blocks[i]);
+    if(inode_map[i] != 0x00)
+    {
+      unsigned char mask = 0x80;
+      for(j = 0; j < 8; ++j) // Petla po bitach bitmapy
+      {
+	if((inode_map[i] & mask) != 0)
+	{
+	  // Znaleziono zajety inode
+	  get_inode(8*i+j, &inod);
+	  printf("%d\t%hhX\t%hhX\t%hu\t%u\t", 8*i+j, inod.filetype, inod.mode, inod.nblocks, inod.filesize);
+	  printf("%hu\t%hu\t%hu\t%hu\t%hu\t%hu\t%hu\t%hu\n", inod.blocks[0], inod.blocks[1], inod.blocks[2], inod.blocks[3], inod.blocks[4], inod.blocks[5], inod.blocks[6], inod.blocks[7]);
+	}
+	mask = mask >> 1; // Przesun maske w prawo
+      }
+    }
   }
+  
+  close_sfsfile();
 }
 
 /* Funkcja testowa
@@ -360,10 +377,12 @@ void debug__print_block(unsigned short blockid, int range)
   int i;
   char data[SFS_BLOCK_SIZE];
   
+  open_sfsfile();
+  
   read_from_block(blockid, 0, data, SFS_BLOCK_SIZE);
   range = (range > SFS_BLOCK_SIZE) ? SFS_BLOCK_SIZE : range;
   
-  printf("Blockinfo %uhd\n", blockid);
+  printf("Blockinfo %hu\n", blockid);
   for(i = 0; i < range; ++i)
   {
     if (data[i] & 0xF0) 
@@ -374,4 +393,6 @@ void debug__print_block(unsigned short blockid, int range)
     if(i%32 == 31) printf("\n");
     else if(i%8 == 7) printf(" ");
   }
+  
+  close_sfsfile();
 }

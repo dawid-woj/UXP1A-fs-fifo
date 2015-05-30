@@ -31,7 +31,9 @@ SRCS = desc_manager.c fifo_mutex.c main.c sfs_ops.c sfs_vd.c simplefs.c simplefs
 OBJS = $(SRCS:.c=.o)
 
 # define the executable file 
-MAIN = ../bin/main
+MAIN = ../bin/simplefs_test
+
+INIT = ../bin/simplefs_init
 
 # The following part of the makefile is generic; it can be used to 
 # build any executable just by changing the definitions above and by
@@ -39,13 +41,13 @@ MAIN = ../bin/main
 
 .PHONY: clean
 
-all:    $(MAIN) INIT
+all:    $(MAIN) init
 	@echo  Project has been compiled
 	
-build: $(MAIN)
+build: $(MAIN) init
 	@echo Project has been built
 	
-rebuild: clean $(MAIN)
+rebuild: clean $(MAIN) init
 	@echo Project has been rebuilt
 
 test: 
@@ -66,7 +68,7 @@ clean:
 	$(RM) *.o
 	
 delbin:
-	$(RM) *~ $(MAIN)
+	$(RM) *~ $(MAIN) $(INIT)
 	
 cleanall: clean delbin
 
@@ -94,8 +96,8 @@ simplefs_aux.o: simplefs_aux.c simplefs_aux.h
 sf_test.o: sf_test.c sf_test.h
 	$(CC) $(CFLAGS) -c -o sf_test.o sf_test.c
 
-INIT: simplefs_init.c fifo_mutex.h
-	$(CC) $(CFLAGS) -c -o simplefs_init simplefs_init.c	
+init: simplefs_init.c fifo_mutex.h
+	$(CC) $(CFLAGS) -o $(INIT) simplefs_init.c	
 
 
 
