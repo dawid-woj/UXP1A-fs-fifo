@@ -338,11 +338,11 @@ void debug__analyse_sfsfile(char* filename)
  */
 void debug__print_used_inodes(void)
 {
-  int i,j;
-  int inode_map_size = sblock.all_inodes / 8;
+  int i,j, inode_map_size;
   struct inode inod;
   
   open_sfsfile();
+  inode_map_size = sblock.all_inodes / 8;
   
   printf("Inodes in use:\nID\ttype\tmode\tnblk\tsize\tblk0\tblk1\tblk2\tblk3\tblk4\tblk5\tblk6\tblkp\n");
   
