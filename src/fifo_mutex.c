@@ -44,6 +44,13 @@ int fifomutex_lock(struct proc_data *data)
 	msg.type = LINK;
 	msg.code = mypid;
 	
+	fd_set	input;
+	FD_ZERO(&input);
+	FD_SET(data->wrfifo_fd, &input);
+	struct timeval timeout;
+	timeout.tv_sec  = 4;
+	timeout.tv_usec = 0;
+
 	data->nextproc_pid = -1;
 	printf("Proces %d, wysyla LINK\n", mypid);
 	write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
@@ -52,10 +59,24 @@ int fifomutex_lock(struct proc_data *data)
 	while(1)
 	{
 		sleep(1);
-		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
+		
+		int n = select(data->wrfifo_fd + 1, &input, NULL, NULL, &timeout);
+		if (n == -1) 
 		{
-			no_writers_error(data, mypid);
-			return -2;
+	    		//blad
+		} 
+		else if (n == 0)/*minal czas*/
+		{
+	  		no_writers_error(data, mypid);
+			return -1;
+		}
+		else
+		{
+			if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
+			{
+				no_writers_error(data, mypid);
+				return -2;
+			}
 		}
 		printf("Proces %d, type: %d code:%d\n", mypid, msg.type, msg.code);
 		if(msg.type == LINK)
@@ -126,6 +147,7 @@ int fifomutex_lock(struct proc_data *data)
  **************************************************************************/
 int fifomutex_unlock(struct proc_data *data)
 {	
+	
 	int mypid = getpid();
 	if(data->wrfifo_fd == -1 && data->myfifo_fd == -1)
 	{
@@ -137,7 +159,14 @@ int fifomutex_unlock(struct proc_data *data)
 	}
 	
 	struct fifo_msg msg;
-	
+
+	fd_set	input;
+	FD_ZERO(&input);
+	FD_SET(data->wrfifo_fd, &input);
+	struct timeval timeout;
+	timeout.tv_sec  = 4;
+	timeout.tv_usec = 0;	
+
 	struct fifo_msg unlinkmsg;	/* wysyłam unlink i czekam na jego powrót,w międzyczasie obsługuję inne komunikaty*/
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = data->nextproc_pid;
@@ -153,11 +182,25 @@ int fifomutex_unlock(struct proc_data *data)
 	while(1)
 	{
 		sleep(1);
-		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0)
+		int n = select(data->wrfifo_fd + 1, &input, NULL, NULL, &timeout);
+		if (n == -1) 
 		{
-			no_writers_error(data, mypid);
-			return -2;
+	    		//blad
+		} 
+		else if (n == 0)/*minal czas*/
+		{
+	  		no_writers_error(data, mypid);
+			return -1;
 		}
+		else
+		{
+			if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
+			{
+				no_writers_error(data, mypid);
+				return -2;
+			}
+		}
+		
 		printf("Proces %d, type: %d code:%d\n", mypid, msg.type, msg.code);
 		if(msg.type == LINK)
 		{	

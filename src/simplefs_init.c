@@ -48,14 +48,37 @@ int fifomutex_init()
 	mkfifo(initfifo_name, 0666);
 	initfifo_fd = open(initfifo_name, O_RDONLY);
 	puts("czekam na pierwszego");
+	
+	fd_set	input;
+	FD_ZERO(&input);
+	FD_SET(initfifo_fd, &input);
+	struct timeval timeout;
+	timeout.tv_sec  = 7;
+	timeout.tv_usec = 0; 
+
 	while(1)
 	{
 		
 		sleep(2);
-		if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
+		
+		
+		int n = select(initfifo_fd + 1, &input, NULL, NULL, &timeout);
+		if (n == -1) 
 		{
-			ino_writers_error();
+	    		//blad
+		} 
+		else if (n == 0)/*minal czas*/
+		{
+	  		ino_writers_error();
 			return -1;
+		}
+		else
+		{		
+			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
+			{
+				ino_writers_error();
+				return -1;
+			}
 		}
 		printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
 		
@@ -135,7 +158,7 @@ int fifomutex_init()
 			
 			exit(0);
 		}
-	else if(msg.type == NO_WRITERS)
+		else if(msg.type == NO_WRITERS)
 		{
 			no_writers_msg();
 		}
@@ -169,6 +192,9 @@ void ino_writers_error()
 	tmp.code = -1;
 	write(wrfifo_fd, (char*)&tmp, sizeof(tmp));
 	close(wrfifo_fd);
+	wr_pid = -1;
+	wrfifo_fd = -1;
+	secondproc_pid = -1;
 }
 
 void u_linkreq()
