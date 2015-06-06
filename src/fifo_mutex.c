@@ -127,12 +127,27 @@ int fifomutex_lock(struct proc_data *data)
 int fifomutex_unlock(struct proc_data *data)
 {	
 	int mypid = getpid();
+	if(data->wrfifo_fd == -1 && data->myfifo_fd == -1)
+	{
+		printf("Proces pid: %d - złe dane\n",mypid);
+		close(data->wrfifo_fd);
+		close(data->myfifo_fd);
+		//unlink(data->myfifo_name);	
+		return(-1);
+	}
+	
 	struct fifo_msg msg;
 	
 	struct fifo_msg unlinkmsg;	/* wysyłam unlink i czekam na jego powrót,w międzyczasie obsługuję inne komunikaty*/
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = data->nextproc_pid;
 	write(data->wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
+	if(data->wrfifo_fd == -1)
+	{
+		printf("Proces pid: %d - kolejka fifo nie istnieje\n",mypid);
+		clear_fifos(data);
+		return(-1);
+	}
 	printf("Proces %d, wysyla UNLINK\n", mypid);
 
 	while(1)
@@ -233,6 +248,8 @@ void clear_fifos(struct proc_data *data)
 	close(data->myfifo_fd);
 	unlink(data->myfifo_name);
 	free(data->myfifo_name);
+	data->wrfifo_fd = -1;
+	data->myfifo_fd = -1;
 }
 
 

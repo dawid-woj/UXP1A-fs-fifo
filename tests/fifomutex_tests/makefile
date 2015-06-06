@@ -43,7 +43,7 @@ INIT = ../../bin/simplefs_init
 .PHONY: clean
 
 all:    process init closeinit
-	@echo  Project has been compiled
+	@echo  Testing module has been compiled
 	
 
 
