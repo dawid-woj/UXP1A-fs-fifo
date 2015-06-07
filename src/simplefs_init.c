@@ -48,39 +48,19 @@ int fifomutex_init()
 	mkfifo(initfifo_name, 0666);
 	initfifo_fd = open(initfifo_name, O_RDONLY);
 	puts("czekam na pierwszego");
-	
-	fd_set	input;
-	FD_ZERO(&input);
-	FD_SET(initfifo_fd, &input);
-	struct timeval timeout;
-	timeout.tv_sec  = 7;
-	timeout.tv_usec = 0; 
 
 	while(1)
 	{
 		
-		sleep(2);
-		
-		
-		int n = select(initfifo_fd + 1, &input, NULL, NULL, &timeout);
-		if (n == -1) 
+		//sleep(2);
+		msg.type = -1;		
+		if(read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
 		{
-	    		//blad
-		} 
-		else if (n == 0)/*minal czas*/
-		{
-	  		ino_writers_error();
+			ino_writers_error();
 			return -1;
 		}
-		else
-		{		
-			if( read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
-			{
-				ino_writers_error();
-				return -1;
-			}
-		}
-		printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
+		if(msg.type != -1)
+			printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
 		
 		if(msg.type == LINK)
 		{
@@ -102,7 +82,7 @@ int fifomutex_init()
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
-		else if(msg.type == UNLINK && unmount_state == 0)
+		else if(msg.type == UNLINK && unmount_state == 0 && wr_pid != -1)
 		{
 			printf("# INIT #: UNLINK pid:%d\n",msg.code);
 			if(msg.code == -1 && secondproc_pid != -1)
@@ -150,6 +130,11 @@ int fifomutex_init()
 		{
 			printf("# INIT #: UNMOUNT_PREPARE \n");
 			start_unmount();
+			if(wr_pid == -1)
+			{
+				close(initfifo_fd);
+				exit(0);
+			}
 		}
 		else if(msg.type == UNMOUNT_EXECUTE)
 		{
@@ -192,9 +177,9 @@ void ino_writers_error()
 	tmp.code = -1;
 	write(wrfifo_fd, (char*)&tmp, sizeof(tmp));
 	close(wrfifo_fd);
-	wr_pid = -1;
+	/*wr_pid = -1;
 	wrfifo_fd = -1;
-	secondproc_pid = -1;
+	secondproc_pid = -1;*/
 }
 
 void u_linkreq()

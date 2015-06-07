@@ -45,7 +45,12 @@ INIT = ../../bin/simplefs_init
 all:    process init closeinit
 	@echo  Testing module has been compiled
 	
-
+#refresh:
+#	rm -f process
+#	rm -f closeinit
+ #  	rm -f main.o
+#	process init closeinit
+#	@echo  Testing module has been compiled
 
 $(MAIN): main.c ../../src/fifo_mutex.h
 	$(CC) $(CFLAGS) -o $(MAIN) $(OBJS)  

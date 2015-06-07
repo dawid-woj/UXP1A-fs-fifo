@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 				break;	
 		}	
 		else if(ret == -2)
-			continue;
+			{}
 	}
 	sleep(3);
 	if(argc >= 2 && (strcmp(argv[1], "-u") == 0))
