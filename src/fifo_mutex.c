@@ -28,6 +28,7 @@ char *initfifo_name = "initfifo";
 
 int fifomutex_lock(struct proc_data *data)
 {	
+	signal(SIGPIPE, SIG_IGN);
 	struct fifo_msg msg;
 	int mypid = getpid();
 	
