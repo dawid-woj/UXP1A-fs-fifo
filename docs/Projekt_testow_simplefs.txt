@@ -7,13 +7,23 @@ W przypadku gdy opis czynności obejmuje więcej niż jedną operację, status d
 I. MAKE
 
 1. Utworzenie sfs o bpi=5 -> Operacja udana, powstaje nowy sfs (SFS_OK)
+./main --newsfs nazwa 5
+
 2. Utworzenie sfs o bpi=100000 -> Przycięcie liczby bloków bo nie może być więcej niż wynika z adresowania typem unsigned short, powstaje nowy sfs (SFS_OK)
+./main --newsfs nazwa 100000
+
 3. Utworzenie sfs o bpi=-1 -> Niepowodzenie (SFS_BAD_OPTION)
+./main --newsfs nazwa m1
+
+4. Utworzenie sfs o bpi=0 -> Niepowodzenie (SFS_BAD_OPTION)
+./main --newsfs nazwa 0
 
 II. MOUNT/UMOUNT
 
   Uwagi:
   Szczegółowe testy będą po integracji simplefs z modułem fifo.
+
+./main --mount nazwa
 
 III. MKDIR
  
@@ -22,8 +32,13 @@ III. MKDIR
   Po każdym teście należy sprawdzić zawartość superbloku, map inodów i bloków, wykorzystane inody i zawartości katalogów.
 
 1. Utworzenie nowego katalogu w katalogu root -> (SFS_OK)
+./main --mount nazwa --mkdir /katalog
+
 2. Utworzenie nowego katalogu w innym katalogu -> (SFS_OK)
+./main --mount nazwa --mkdir /katalog/katalog2
+
 3. Utworzenie istniejącego katalogu -> (SFS_EEXISTS)
+./main --mount nazwa --mkdir /katalog
 
 IV. OPEN/CREAT/CLOSE
 
@@ -33,33 +48,88 @@ IV. OPEN/CREAT/CLOSE
   Po każdym teście należy sprawdzić zawartość superbloku, map inodów i bloków, wykorzystane inody i zawartości katalogów.
 
 1. Utworzenie nieistniejącego pliku w katalogu root  -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik <mode> --close
+
 2. Utworzenie nieistniejącego pliku w innym katalogu -> (deskryptor pliku)
+./main --mount nazwa --mkfile /katalog/plik <mode> --close
+
 3. Utworzenie istniejącego pliku w katalogu root     -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik <mode> --close
+
 4. Utworzenie istniejącego pliku w innym katalogu    -> (deskryptor pliku)
+./main --mount nazwa --mkfile /katalog/plik <mode> --close
+
 5. Otworzenie istniejącego pliku w katalogu root     -> (deskryptor pliku)
+./main --mount nazwa --open /plik <mode> --close
+
 6. Otworzenie istniejącego pliku w innym katalogu    -> (deskryptor pliku)
+./main --mount nazwa --open /katalog/plik <mode> --close
+
 7. Otworzenie istniejącego pliku z podaną niepoprawną opcją -> (SFS_BAD_OPTION)
+./main --mount nazwa --open /katalog/plik <bad_mode>
+
 8. Otworzenie istniejącego pliku bez wyspecyfikowania trybu dostępu -> (SFS_BAD_OPTION)
+./main --mount nazwa --open /katalog/plik <bad_mode>
+
 9. Utworzenie nieistniejącego pliku w zapełnionym katalogu -> (SFS_DIR_FULL)
+./main --mount nazwa --mkfile /zapelniony_kat/plik <mode>
+
 10. Utworzenie nieistniejącego pliku po zajęciu wszystkich 512 inodów -> (SFS_TO_MANY_FILES)
+...
+
 11. Utworzenie pliku w trybie RDONLY i otwarcie w trybie RDONLY -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <RDONLY> --close
+
 12. Utworzenie pliku w trybie RDONLY i otwarcie w trybie WRONLY -> (SFS_EACCESS)
+./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <WRONLY> --close
+
 13. Utworzenie pliku w trybie RDONLY i otwarcie w trybie RDWR   -> (SFS_EACCESS)
+./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <RDWR> --close
+
 14. Utworzenie pliku w trybie WRONLY i otwarcie w trybie RDONLY -> (SFS_EACCESS)
+./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <RDONLY> --close
+
 15. Utworzenie pliku w trybie WRONLY i otwarcie w trybie WRONLY -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <WRONLY> --close
+
 16. Utworzenie pliku w trybie WRONLY i otwarcie w trybie RDWR   -> (SFS_EACCESS)
+./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <RDWR> --close
+
 17. Utworzenie pliku w trybie RDWR   i otwarcie w trybie RDONLY -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <RDONLY> --close
+
 18. Utworzenie pliku w trybie RDWR   i otwarcie w trybie WRONLY -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <WRONLY> --close
+
 19. Utworzenie pliku w trybie RDWR   i otwarcie w trybie RDWR   -> (deskryptor pliku)
+./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <RDWR> --close
+
 20. Dwukrotne otworzenie istniejącego pliku -> (SFS_EOPENED)
+./main --mount nazwa --mkfile /plik1 <mode> --open /plik1 <mode> --open /plik1 <mode> --close
+
 21. Uwtorzenie nieistniejącego pliku z nazwą o długości 50 znaków -> (SFS_NAME_TO_LONG)
+./main --mount nazwa --mkfile /abcdefghijklmnoprtsuwxyz1234567890abcxyzhuehihitralalalalala <mode>
+
 22. Uwtorzenie nieistniejącego pliku z wyspecyfikowaniem w ścieżce nieistniejącego katalogu -> (SFS_BAD_PATH)
+./main --mount nazwa --mkfile /nie_ma_tego_dir/plik1 <mode>
+
 23. Otworzenie niestniejącego pliku -> (SFS_NOT_FOUND)
+./main --mount nazwa --open /nie_ma_tego_pliku <mode>
+
 24. Utworzenie niestniejącego pliku z pustą nazwą ->(SFS_BAD_NAME)
+./main --mount nazwa --open / <mode>
+
 25. Otworzenie istniejacego pliku i zamkniecie go -> (SFS_OK)
+./main --mount nazwa --open /plik <mode> --close
+
 26. Zamkniecie pliku o deskryptorze określonym liczbą ujemną -> (SFS_BAD_DESC)
+./main --mount nazwa --close
+[fd w main.c jest na samym poczatku inicjalizowany wartoscia "-1", zatem tutaj zostanei wywolany simplefs_close(-1);]
+
 27. Zamkniecie nieotworzonego pliku, który nie jest aktualnie otworzony przez zaden inny proces -> (SFS_EDESC)
+
 28. Zamknięcie nieotworzonego pliku, który jest aktualnie otworzony przez inny proces -> (SFS_ECLOSED)
+
 29. Odmontowanie pliku sfs i otworzenie istniejacego pliku -> (SFS_VDFAULT)
 
 V. READ/WRITE/LSEEK
@@ -72,20 +142,35 @@ V. READ/WRITE/LSEEK
   Należy dokładnie sprawdzić odczytywaną i zapisywaną zawartość oraz kontrolować pozycję z której odbywa się odczyt/zapis
 
 1. Odczyt pustego pliku -> (SFS_EOF)
+
 2. Odczyt pliku o rozmiarze do 28672 B -> (liczba odczytanych bajtów)
+
 3. Odczyt pliku o rozmiarze ponad 28672 B (odczyt z bloków pośrednich)-> (liczba odczytanych bajtów)
+
 4. Odczyt z pliku więcej bajtów niż wynosi rozmiar pliku -> (liczba odczytanych bajtów)
+
 5. Odczyt z pliku otworzonego w trybie WRONLY -> (SFS_EACCESS)
+
 6. Zapis do pustego pliku -> (liczba zapisanych bajtów)
+
 7. Zapis do pliku mniej niż 28672 B -> (liczba zapisanych bajtów)
+
 8. Zapis do pliku ponad 28672 B (wykorzystanie bloków pośrednich)-> (liczba zapisanych bajtów)
+
 9. Zapis do pliku ponad 8417280 B (więcej niż wynosi maksymalny rozmar pliku) -> (liczba zapisanych bajtów)
+
 10. Zapis do pliku otworzonego w trybie tylko do odczytu -> (SFS_EACCESS)
+
 11. Ustawienie pozycji w pliku względem początku pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
 12. Ustawienie pozycji w pliku względem aktualnej pozycji w pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
 13. Ustawienie pozycji w pliku względem końca pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
 14. Ustawienie pozycji w pliku na < 0 i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
 15. Ustawienie pozycji w pliku na > rozmiar pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
 16. Ustawienie pozycji w pliku z parametrem innym niż SET, CUR oraz END -> (SFS_BAD_OPTION)
 
 VI. UNLINK
@@ -103,60 +188,3 @@ VI. UNLINK
 6. Usunięcie katalogu root -> (SFS_BAD_NAME)
 7. Usunięcie istniejącego pustego katalogu -> (SFS_OK)
 8. Usunięcie istniejącego katalogu zawierajacego pliki puste, pliki z zaalokowanymi blokami bezpośrednimi i pośrednimi, podkatalogi -> (SFS_OK) 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

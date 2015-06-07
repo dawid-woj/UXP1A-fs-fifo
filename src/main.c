@@ -1,17 +1,20 @@
 /*
 To ponizsze moze realizowac rozne scenariusze w zaleznosci od parametrow wywolan, np.
 gdy skompilujemy ten program (gcc -o main main.c) i wywolamy:
-./main -newsfs system -mount system -mkfile dupa 4 -sleep 3 -open dupa 2 -cptosfs cos 20 -close -umount [&]
+./main --newsfs system 20 --mount system --mkfile pliczek 4 --sleep 3 --open pliczek 2 --cptosfs cos 20 --close --umount [&]
 
 to wykona sie, co nastepuje:
-1) simplefs_make() - nowy wirtualny dysk o nazwie 'system'
+1) simplefs_make() - nowy wirtualny dysk o nazwie 'system' z 20 blokami na inode
 2) simplefs_mount() - zamontuj system z pliku 'system'
-3) simplefs_creat() - stworz plik 'dupa' z mode=4
+3) simplefs_creat() - stworz plik 'pliczek' z mode=4
 4) usnij na 3 sekundy
-5) otworz plik 'dupa' z mode=2
-6) zapisz do otwartego pliku (czyli 'dupa') 20 bajtow z pliku 'cos' bedace na zewnatrz systemu
-7) zamknij otwarty plik ('dupa')
+5) otworz plik 'pliczek' z mode=2
+6) zapisz do otwartego pliku (czyli 'pliczek') 20 bajtow z pliku 'cos' bedace na zewnatrz systemu
+7) zamknij otwarty plik ('pliczek')
 8) odmontuj system
+
+UWAGA!!!
+Jesli chcesz przekazac ujemny argument, np. -5 nalezy pisac m5!!!
 */
 
 #include <stdio.h>
@@ -25,23 +28,23 @@ to wykona sie, co nastepuje:
 #include "sfs_vd.h"
 
 /* Polecenia:
- * -newsfs filename bpi 	OK
- * -mount filename		OK
- * -umount			OK
- * -mkfile path mode		OK
- * -mkdir path			OK
- * -rm path			?
- * -open path mode		OK
- * -close			OK
- * -seek value whence		?
- * -cptosfs path bytes		OK
- * -cpfromsfs path bytes	OK
- * -sleep value			OK
+ * --newsfs filename bpi 	OK
+ * --mount filename		OK
+ * --umount			OK
+ * --mkfile path mode		OK
+ * --mkdir path			OK
+ * --rm path			?
+ * --open path mode		OK
+ * --close			OK
+ * --seek whence offset
+ * --cptosfs path bytes		OK
+ * --cpfromsfs path bytes	OK
+ * --sleep value			OK
  * -------------------------
- * -listdir path
- * -stat filename
- * -printblock blockid range
- * -printinodes
+ * --listdir path
+ * --stat filename
+ * --printblock blockid range
+ * --printinodes
  */
 
 
@@ -51,10 +54,23 @@ int cpfromsfs(int fd, const char * filename, int bytes);
 
 int isNextOption(const char * str)
 {
-	char c = str[0];
-	if (c == '-')
+	if (str == 0)
+		return 1;
+	char c1 = str[0];
+	char c2 = str[1];
+	if (c1 == '-' && c2 == '-')
 		return 1;
 	return 0;
+}
+
+
+long int strToNumber(char * str)
+{
+	if (str == 0)
+		return 0;
+	if (str[0] == 'm') // 'm' zastepuje znak minus dla ujemnych wartosci
+		str[0] = '-';
+	return strtol(str, NULL, 10);
 }
 
 
@@ -96,7 +112,7 @@ int main(int argc, char **argv)
 	// pierwsze przejscie po argumentach w celu sprawdzenia ich poprawnosci:
 	while (1) {
 		// wczytanie kolejnej opcji z argv:
-		c = getopt_long_only(argc, args, "", long_options, NULL);
+		c = getopt_long(argc, args, "", long_options, NULL);
 		// gdy nie ma wiecej opcji do wczytania -> zakoncz:
 		if (c == -1)
 			break;
@@ -150,7 +166,7 @@ int main(int argc, char **argv)
 			// close
 			case 'c':
 				break;
-			// seek value whence
+			// seek whence offset
 			case 's':
 				if (isNextOption(optarg) || isNextOption(argv[optind])) {
 					fprintf(stderr, "%s: brak argumentu(ow)!\n", args[optind-2]);
@@ -203,7 +219,7 @@ int main(int argc, char **argv)
 			case 'i':
 				break;
 			default:
-				fprintf(stderr, "%s: bledna opcja!\n", args[optind-1]);
+				fprintf(stderr, "%s: bledna opcja!\n", args[optind]);
 				error = 1;
 		}
 		if (error) {
@@ -217,17 +233,18 @@ int main(int argc, char **argv)
 	// drugie przejscie: wszystkie argumenty sa poprawne, wykonaj je po kolei:
 	while (1) {
 		// wczytanie kolejnej opcji z argv:
-		c = getopt_long_only(argc, argv, "", long_options, NULL);
+		c = getopt_long(argc, argv, "", long_options, NULL);
 		// gdy nie ma wiecej opcji do wczytania -> zakoncz:
 		if (c == -1)
 			break;
 
 		switch (c) {
-			// newsfs path
+			// newsfs path bpi
 			case 'n':
-				status = simplefs_make(optarg, (int)strtol(argv[optind], NULL, 10));
-				printf("simplefs_make(%s, %d)\n", optarg, (int)strtol(argv[optind], NULL, 10));
+				status = simplefs_make(optarg, (int)strToNumber(argv[optind]));
+				printf("simplefs_make(%s, %d)\n", optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
+				++optind;
 				break;
 			// mount path
 			case 'm':
@@ -243,8 +260,8 @@ int main(int argc, char **argv)
 				break;
 			// mkfile filename mode
 			case 'f':
-				status = fd = simplefs_creat(optarg, (int)strtol(argv[optind], NULL, 10));
-				printf("simplefs_creat(%s, %d)\n", optarg, (int)strtol(argv[optind], NULL, 10));
+				status = fd = simplefs_creat(optarg, (int)strToNumber(argv[optind]));
+				printf("simplefs_creat(%s, %d)\n", optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
@@ -262,8 +279,8 @@ int main(int argc, char **argv)
 				break;
 			// open filename mode
 			case 'o':
-				status = fd = simplefs_open(optarg, (int)strtol(argv[optind], NULL, 10));
-				printf("simplefs_open(%s, %d)\n", optarg, (int)strtol(argv[optind], NULL, 10));
+				status = fd = simplefs_open(optarg, (int)strToNumber(argv[optind]));
+				printf("simplefs_open(%s, %d)\n", optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
@@ -273,29 +290,29 @@ int main(int argc, char **argv)
 				printf("simplefs_close(fd)\n");
 				printf("Operation status = %d\n", status);
 				break;
-			// seek value whence
+			// seek whence offset
 			case 's':
-				status = simplefs_lseek(fd, (int)strtol(argv[optind], NULL, 10), (int)strtol(optarg, NULL, 10));
-				printf("simplefs_lseek(fd, %d, %d)\n", (int)strtol(argv[optind], NULL, 10), (int)strtol(optarg, NULL, 10));
+				status = simplefs_lseek(fd, (int)strToNumber(optarg), (int)strToNumber(argv[optind]));
+				printf("simplefs_lseek(fd, %d, %d)\n", (int)strToNumber(optarg), (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
 			// cptosfs filename value
 			case 't':
-				status = cptosfs(fd, optarg, (int)strtol(argv[optind], NULL, 10));
-				printf("cptosfs(fd, %s, %d)\n", optarg, (int)strtol(argv[optind], NULL, 10));
+				status = cptosfs(fd, optarg, (int)strToNumber(argv[optind]));
+				printf("cptosfs(fd, %s, %d)\n", optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
 			// cpfromsfs filename value
 			case 'p':
-				status = cpfromsfs(fd, optarg, (int)strtol(argv[optind], NULL, 10));
-				printf("cpfromsfs(fd, %s, %d)\n", optarg, (int)strtol(argv[optind], NULL, 10));
+				status = cpfromsfs(fd, optarg, (int)strToNumber(argv[optind]));
+				printf("cpfromsfs(fd, %s, %d)\n", optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				break;
 			// sleep seconds
 			case 'w':
-				sleep((int)strtol(optarg, NULL, 10));
+				sleep((int)strToNumber(optarg));
 				break;
 			// listdir path
 			case 'l':
@@ -309,7 +326,7 @@ int main(int argc, char **argv)
 				break;
 			// printblock blockid range
 			case 'b':
-				debug__print_block((unsigned short)strtol(optarg, NULL, 10), (int)strtol(argv[optind], NULL, 10));
+				debug__print_block((unsigned short)strToNumber(optarg), (int)strToNumber(argv[optind]));
 				break;
 			// printinodes
 			case 'i':
