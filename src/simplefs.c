@@ -16,16 +16,20 @@
  * Parametry:
  * name - nazwa tworzonego pliku SFS
  * blocks_per_inode - liczba blokow danych przypadajacych na pojedynczy inode
- * @todo: opisac zwracane wartosci
- * SFS_OK
- * SFS_VDFAULT
+ * Zwraca:
+ * SFS_OK - sukces, albo jeden z ponizszych kodow bledu:
+ * SFS_VDFAULT, SFS_BAD_OPTION
  ***********************************************************************************************************************************************/
 int simplefs_make(char* name, int blocks_per_inode)
 {
   struct dir_header root_header;
   
+  if(blocks_per_inode < 1)
+  {
+    return SFS_BAD_OPTION;
+  }
   // Tworzy nowy plik sfs i otwiera go
-  if (create_sfsfile(name, blocks_per_inode) < 0) 
+  if(create_sfsfile(name, blocks_per_inode) < 0) 
   {
     return SFS_VDFAULT;
   }
@@ -46,6 +50,7 @@ int simplefs_make(char* name, int blocks_per_inode)
  * Przygotowuje witrualny dysk simplefs utworzony przez simplefs_make() do uzytku
  * Uruchamia demona fsinit
  * @todo: opisac zwracane wartosci
+ * Zwraca
  * @todo: kontrola poprawnosci
  * @todo: dodac tworznie procesu fsinit
  ***********************************************************************************************************************************************/
@@ -79,7 +84,10 @@ int simplefs_umount(void)
  * SFS_WRONLY - plik otwierany w trybie do zapisu
  * SFS_RDWR - plik otwierany w trybie do zapisu i odczytu
  * SFS_CREAT - jesli plik nie istnieje to zostanie utworzony ze wskazanymi w mode prawami dostepu
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * deskryptor otworzonego pliku, albo jeden z ponizszych kodow bledu:
+ * SFS_BAD_OPTION, SFS_VDFAULT, SFS_TO_MANY_FILES, SFS_DIR_FULL, SFS_EACCESS, SFS_EOPENED,
+ * SFS_EDESC, SFS_NAME_TO_LONG, SFS BAD_PATH, SFS_NOT_FOUND, SFS_BAD_NAME
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_open(char *name, int mode)
@@ -107,7 +115,9 @@ int simplefs_open(char *name, int mode)
 /***********************************************************************************************************************************************
  * SIMPLEFS UNLINK
  * Usuwa plik/katalog wskazany przez sciezke name z systemu simplefs
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * SFS_OK - usuwanie zakonczone sukcesem lub jeden z ponizszych kodow bledow:
+ * SFS_VDFAULT, SFS_NAME_TO_LONG, SFS BAD_PATH, SFS_NOT_FOUND, SFS_BAD_NAME
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_unlink(char *name)
@@ -129,7 +139,9 @@ int simplefs_unlink(char *name)
 /***********************************************************************************************************************************************
  * SIMPLEFS MKDIR
  * Tworzy katalog ze sciezka dostepu name
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * SFS_OK - udalo sie utowrzyc katalog lub jeden z ponizszych kodow bledu:
+ * SFS_EEXISTS, SFS_NAME_TO_LONG, SFS BAD_PATH, SFS_BAD_NAME, SFS_TO_MANY_FILES, SFS_NOSPACE, SFS_DIRFULL
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_mkdir(char *name)
@@ -156,7 +168,10 @@ int status;
  * SFS_RDONLY - plik otwierany w trybie do odczytu
  * SFS_WRONLY - plik otwierany w trybie do zapisu
  * SFS_RDWR - plik otwierany w trybie do zapisu i odczytu
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * deskryptor utworzonego/otworzonego pliku, albo jeden z ponizszych kodow bledu:
+ * SFS_BAD_OPTION, SFS_VDFAULT, SFS_TO_MANY_FILES, SFS_DIR_FULL, SFS_EOPENED,
+ * SFS_EDESC, SFS_NAME_TO_LONG, SFS BAD_PATH, SFS_BAD_NAME
  ***********************************************************************************************************************************************/
 int simplefs_creat (char *name, int mode)
 {
@@ -166,7 +181,9 @@ int simplefs_creat (char *name, int mode)
 /***********************************************************************************************************************************************
  * SIMPLEFS READ
  * Odczytuje z pliku o deskryptorze fd len bajtow do bufora bufora
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * liczba odczytanych bajtow lub jeden z ponizszych kodow bledow:
+ * SFS_BAD_DESC, SFS_VDFAULT, SFS_EDESC, SFS_EACCESS, SFS_EOF
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_read(int fd, char *buf, int len)
@@ -192,7 +209,9 @@ int simplefs_read(int fd, char *buf, int len)
 /***********************************************************************************************************************************************
  * SIMPLEFS WRITE
  * Zapisuje do pliku o deskryptorze fd len bajtow z bufora bufora
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * liczba zapisanych bajtow lub jeden z ponizszych kodow bledow:
+ * SFS_BAD_DESC, SFS_VDFAULT, SFS_EDESC, SFS_EACCESS
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_write(int fd, char *buf, int len)
@@ -222,6 +241,9 @@ int simplefs_write(int fd, char *buf, int len)
  * SFS_SEEK_CUR - offset jest dodawany do obecnej pozycji wskaznika odczytu/zapisu
  * SFS_SEEK_SET - offset jest ustawiany wzgledem poczatku pliku
  * SFS_SEEK_END - offset jest ustawiany wzgledem konca pliku
+ * Zwraca:
+ * aktualna pozycje w pliku lub jeden z ponizszych kodow bledu:
+ * SFS_BAD_DESC, SFS_VDFAULT, SFS_EDESC, SFS_BAD_OPTION
  * @todo: opisac zwracane wartosci
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
@@ -248,7 +270,9 @@ int simplefs_lseek(int fd, int whence, int offset)
 /***********************************************************************************************************************************************
  * SIMPLEFS CLOSE
  * Zamyka plik o deskryptorze fd
- * @todo: opisac zwracane wartosci
+ * Zwraca:
+ * SFS_OK - sukces, albo jeden z ponizszych kodow bledu:
+ * SFS_BAD_DESC, SFS_ECLOSED, SFS_EDESC
  * @todo: dodac synchronizacje z token ring
  ***********************************************************************************************************************************************/
 int simplefs_close(int fd)

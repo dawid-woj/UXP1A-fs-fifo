@@ -11,21 +11,21 @@
 #define SFS_SEEK_END		2	// Koniec pliku	
 
 /* Kody sygnalizacyjne */
-#define SFS_OK			0	// Kod sukcesu
-#define SFS_EOF			0	// Koniec pliku
+#define SFS_OK			0	// Operacja zakończona sukcesem
+#define SFS_EOF			0	// Odczyt natrafil na koniec pliku
 #define SFS_NOT_FOUND		-1	// Nie znaleziono pliku
 #define SFS_NAME_TO_LONG 	-2	// Nazwa pliku/katalogu ma ponad 26 znakow
-#define SFS_BAD_PATH		-3	// Niepoprawna sciezka do pliku
-#define SFS_BAD_NAME		-4	// Niepoprawna nazwa pliku
+#define SFS_BAD_PATH		-3	// Niepoprawna sciezka do pliku (podano nieistniejacy katalog)
+#define SFS_BAD_NAME		-4	// Pusta nazwa pliku
 #define SFS_TO_MANY_FILES	-5	// Brak wolnych inodow
 #define SFS_DIR_FULL		-6	// Brak miejsca w katalogu
 #define SFS_EACCESS		-7	// Blad praw dostepu do pliku
-#define SFS_EDESC		-8	// Blad pliku tymczasowgo pliku dekskryptora, Uwaga! Jesli plik byl tworzony, to udalo sie go stworzyc, ale nie otworzyc
-#define SFS_EOPENED		-9	// Plik jest juz otwarty
-#define SFS_EEXISTS		-10	// Plik/katalog juz istnieje
+#define SFS_EDESC		-8	// Blad tymczasowgo pliku dekskryptora (plik tymczasowy zostal niespodziewanie usuniety, albo plik opisany deskryptorem nie zostal poprawnie otworzony) Uwaga! Jesli plik byl tworzony, to udalo sie go stworzyc, ale nie otworzyc
+#define SFS_EOPENED		-9	// Plik zostal juz otworzony przez proces
+#define SFS_EEXISTS		-10	// Katalog juz istnieje
 #define SFS_NOSPACE		-11	// Brak miejsca na wirtualnym dysku (nie ma wolnych blokow)
 #define SFS_ECLOSED		-12	// Plik zamkniety
-#define SFS_BAD_OPTION		-13	// Niepoprawny argument
+#define SFS_BAD_OPTION		-13	// Niepoprawny argument funkcji
 #define SFS_BAD_DESC		-14	// Niepoprawny deskryptor pliku
 #define SFS_VDFAULT		-15	// Blad dostepu do pliku zawierajacego sfs
 

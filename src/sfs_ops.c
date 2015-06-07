@@ -390,6 +390,11 @@ int sfsop_lseek(int fd, int whence, int offset)
     return SFS_BAD_OPTION;		// Niepoprawna opcja
   }
   
+  if(rwpointer < 0)
+  {
+    rwpointer = 0;
+  }
+  
   update_desc(fd, rwpointer);
   
   return rwpointer;
