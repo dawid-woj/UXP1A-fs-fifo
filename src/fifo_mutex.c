@@ -53,7 +53,7 @@ int fifomutex_lock(struct proc_data *data)
 	data->myfifo_fd = open(data->myfifo_name, O_RDONLY);
 	while(1)
 	{
-		sleep(1);
+		//sleep(1);
 				
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
@@ -157,7 +157,7 @@ int fifomutex_unlock(struct proc_data *data)
 
 	while(1)
 	{
-		sleep(1);
+		//sleep(1);
 		
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
@@ -311,11 +311,15 @@ int fifomutex_startinit()
 int fifomutex_umount()
 {
 	struct fifo_msg msg;
-	int tmpfifo_fd = open(initfifo_name, O_WRONLY);
-	if(tmpfifo_fd == -1)
+	int tmpfifo_fd = -1;
+	int count = 0;
+	while((tmpfifo_fd = open(initfifo_name, O_WRONLY)) == -1)
 	{
-		puts("Fifomutex unmount: brak kolejki init");
-		return -1;
+		printf("Fifomutex unmount: brak kolejki init %d", count);
+		if(count>4)
+			return -1;
+		count++;
+		sleep(1);
 	}
 	msg.type = UNMOUNT_PREPARE;
 	msg.code = 0;

@@ -37,7 +37,7 @@ struct proc_data
 };
 
 
-pid_t init_pid;
+
 
 int fifomutex_lock();
 int fifomutex_unlock();

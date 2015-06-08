@@ -52,7 +52,7 @@ int fifomutex_init()
 	while(1)
 	{
 		
-		//sleep(2);
+		////sleep(2);
 		msg.type = -1;		
 		if(read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
 		{
