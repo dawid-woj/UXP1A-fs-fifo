@@ -213,13 +213,17 @@ int sfsop_read(int fd, char *buf, int len)
   {
     return SFS_EDESC;			// Blad pliku dostepu do pliku tymczasowego
   }
-  if((mode | SFS_RDONLY) == 0) 
+  if((mode & SFS_RDONLY) == 0) 
   {
-    readbytes = SFS_EACCESS;		// Nie mozna czytac z pliku
+    return SFS_EACCESS;		// Nie mozna czytac z pliku
   }
   if(offset >= inod.filesize) 		
   {
     return SFS_EOF;			// Pozyca odczytu wskazuje poza koniec pliku
+  }
+  if(offset + len >= inod.filesize)
+  {
+    len = inod.filesize - offset;
   }
   // Wyznaczenie nr bloku i offsetu w bloku
   readblock = offset / SFS_BLOCK_SIZE;
@@ -279,7 +283,7 @@ int sfsop_write(int fd, char *buf, int len)
   {
     return SFS_EDESC;			// Blad pliku dostepu do pliku tymczasowego
   }
-  if((mode | SFS_WRONLY) == 0) 
+  if((mode & SFS_WRONLY) == 0) 
   {
     return SFS_EACCESS;			// Nie mozna pisac do pliku
   }

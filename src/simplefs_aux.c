@@ -79,7 +79,7 @@ int find_in_directory(int dirinodeid, char* name, char type, struct directory* d
   open_dir(dirinodeid, dir); // Wcztanie zawartosci katalogu
   for(i = 0; i < dir->head.entries; ++i)
   {
-    if((strcmp(name, dir->entries[i].filename) == 0) && (dir->entries[i].type | type))
+    if((strcmp(name, dir->entries[i].filename) == 0) && (dir->entries[i].type & type))
     {
       dir->found_object_position = i;
       return dir->entries[i].inode_number;

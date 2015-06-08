@@ -7,171 +7,312 @@ W przypadku gdy opis czynności obejmuje więcej niż jedną operację, status d
 I. MAKE
 
 1. Utworzenie sfs o bpi=5 -> Operacja udana, powstaje nowy sfs (SFS_OK)
-./main --newsfs nazwa 5
+bin/simplefs_test --newsfs sfs1 10
 
 2. Utworzenie sfs o bpi=100000 -> Przycięcie liczby bloków bo nie może być więcej niż wynika z adresowania typem unsigned short, powstaje nowy sfs (SFS_OK)
-./main --newsfs nazwa 100000
+bin/simplefs_test --newsfs sfs2 100000
 
 3. Utworzenie sfs o bpi=-1 -> Niepowodzenie (SFS_BAD_OPTION)
-./main --newsfs nazwa m1
+bin/simplefs_test --newsfs sfs3 m1
 
 4. Utworzenie sfs o bpi=0 -> Niepowodzenie (SFS_BAD_OPTION)
-./main --newsfs nazwa 0
+bin/simplefs_test --newsfs sfs4 0
+
+5. Sprawdzenie:
+bin/simplefs_test --stat sfs1
+bin/simplefs_test --stat sfs2
 
 II. MOUNT/UMOUNT
 
   Uwagi:
   Szczegółowe testy będą po integracji simplefs z modułem fifo.
 
-./main --mount nazwa
+bin/simplefs_test --mount sfs1
+bin/simplefs_test --umount
 
 III. MKDIR
  
   Uwagi:
   Testy 1-3 nalezy wykonywac po udanym zamontowaniu pliku sfs (po wykonaniu simplefs_mount()).
   Po każdym teście należy sprawdzić zawartość superbloku, map inodów i bloków, wykorzystane inody i zawartości katalogów.
+  
+0. Przygotowanie:
+bin/simplefs_test --mount sfs1
+bin/simplefs_test --stat sfs1
+bin/simplefs_test --listdir ""
+bin/simplefs_test --printinodes
 
 1. Utworzenie nowego katalogu w katalogu root -> (SFS_OK)
-./main --mount nazwa --mkdir /katalog
+bin/simplefs_test --mkdir katalog
 
 2. Utworzenie nowego katalogu w innym katalogu -> (SFS_OK)
-./main --mount nazwa --mkdir /katalog/katalog2
+bin/simplefs_test --mkdir katalog/katalog2
 
 3. Utworzenie istniejącego katalogu -> (SFS_EEXISTS)
-./main --mount nazwa --mkdir /katalog
+bin/simplefs_test --mkdir katalog
+
+4. Sprawdzenie
+bin/simplefs_test --stat sfs1
+bin/simplefs_test --listdir ""
+bin/simplefs_test --listdir katalog
+bin/simplefs_test --listdir katalog/katalog2
+bin/simplefs_test --printinodes
 
 IV. OPEN/CREAT/CLOSE
 
   Uwagi:
-  Testy 1-28 nalezy wykonywac po udanym zamontowaniu pliku sfs (po wykonaniu simplefs_mount()).
+  Testy 1-33 nalezy wykonywac po udanym zamontowaniu pliku sfs (po wykonaniu simplefs_mount()).
   Pliki otworzone w testach 1-24 należy zamykać na koniec każdego testu aby uniknąć śmieci w folderze temp.
   Po każdym teście należy sprawdzić zawartość superbloku, map inodów i bloków, wykorzystane inody i zawartości katalogów.
+  
+0. Przygotowanie:
+// Nic jeśli poprawnie wykonano scenariusze z grupy III.
 
 1. Utworzenie nieistniejącego pliku w katalogu root  -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik <mode> --close
+bin/simplefs_test --mkfile plik 3 --close
 
 2. Utworzenie nieistniejącego pliku w innym katalogu -> (deskryptor pliku)
-./main --mount nazwa --mkfile /katalog/plik <mode> --close
+bin/simplefs_test --mkfile katalog/plik 3 --close
 
 3. Utworzenie istniejącego pliku w katalogu root     -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik <mode> --close
+bin/simplefs_test --mkfile plik 3 --close
 
 4. Utworzenie istniejącego pliku w innym katalogu    -> (deskryptor pliku)
-./main --mount nazwa --mkfile /katalog/plik <mode> --close
+bin/simplefs_test --mkfile katalog/plik 3 --close
 
 5. Otworzenie istniejącego pliku w katalogu root     -> (deskryptor pliku)
-./main --mount nazwa --open /plik <mode> --close
+bin/simplefs_test --open plik 3 --close
 
 6. Otworzenie istniejącego pliku w innym katalogu    -> (deskryptor pliku)
-./main --mount nazwa --open /katalog/plik <mode> --close
+bin/simplefs_test --open katalog/plik 3 --close
 
 7. Otworzenie istniejącego pliku z podaną niepoprawną opcją -> (SFS_BAD_OPTION)
-./main --mount nazwa --open /katalog/plik <bad_mode>
+bin/simplefs_test --open katalog/plik 17
 
 8. Otworzenie istniejącego pliku bez wyspecyfikowania trybu dostępu -> (SFS_BAD_OPTION)
-./main --mount nazwa --open /katalog/plik <bad_mode>
+bin/simplefs_test --open katalog/plik 4
 
 9. Utworzenie nieistniejącego pliku w zapełnionym katalogu -> (SFS_DIR_FULL)
-./main --mount nazwa --mkfile /zapelniony_kat/plik <mode>
+
+#!/bin/bash
+rm full_dir_test_sfs
+bin/simplefs --newsfs full_dir_test_sfs 2
+bin/simplefs --mount full_dir_test_sfs
+bin/simplefs --stat full_dir_test_sfs
+bin/simplefs_test --mkdir zapelniony_kat
+for i in {0..126}; do
+  bin/simplefs_test --mkfile zapelniony_kat/plik$i 3 --close
+done
+bin/simplefs_test --mkfile zapelniony_kat/plik 3
+bin/simplefs --stat full_dir_test_sfs
+bin/simplefs --umount
 
 10. Utworzenie nieistniejącego pliku po zajęciu wszystkich 512 inodów -> (SFS_TO_MANY_FILES)
-...
+
+#!/bin/bash
+rm max_inodes_test_sfs
+bin/simplefs --newsfs max_inodes_test_sfs 2
+bin/simplefs --mount max_inodes_test_sfs
+bin/simplefs --stat max_inodes_test_sfs
+for j in {0..3}; do
+	./bin/simplefs_test --mkdir kat$j
+	for i in {0..126}; do
+    	./bin/simplefs_test --mkfile kat$j/plik$i 3 --close
+	done
+done
+bin/simplefs --stat max_inodes_test_sfs
+bin/simplefs --umount
+
+11. - 19. - przygotowanie - utworzenie plików z prawami dostępu RDONLY, WRONLY i RDWR:
+bin/simplefs_test --mkdir akat --mkfile akat/plikRD 1 --close --mkfile akat/plikWR 2 --close --mkfile akat/plikRDWR 3 --close
 
 11. Utworzenie pliku w trybie RDONLY i otwarcie w trybie RDONLY -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <RDONLY> --close
+bin/simplefs_test --open akat/plikRD 1 --close
 
 12. Utworzenie pliku w trybie RDONLY i otwarcie w trybie WRONLY -> (SFS_EACCESS)
-./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <WRONLY> --close
+bin/simplefs_test --open akat/plikRD 2
 
 13. Utworzenie pliku w trybie RDONLY i otwarcie w trybie RDWR   -> (SFS_EACCESS)
-./main --mount nazwa --mkfile /plik1 <RDONLY> --open /plik1 <RDWR> --close
+bin/simplefs_test --open akat/plikRD 3
 
 14. Utworzenie pliku w trybie WRONLY i otwarcie w trybie RDONLY -> (SFS_EACCESS)
-./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <RDONLY> --close
+bin/simplefs_test --open akat/plikWR 1 
 
 15. Utworzenie pliku w trybie WRONLY i otwarcie w trybie WRONLY -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <WRONLY> --close
+bin/simplefs_test --open akat/plikWR 2 --close 
 
 16. Utworzenie pliku w trybie WRONLY i otwarcie w trybie RDWR   -> (SFS_EACCESS)
-./main --mount nazwa --mkfile /plik1 <WRONLY> --open /plik1 <RDWR> --close
+bin/simplefs_test --open akat/plikWR 3 
 
 17. Utworzenie pliku w trybie RDWR   i otwarcie w trybie RDONLY -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <RDONLY> --close
+bin/simplefs_test --open akat/plikRDWR 1  --close
 
 18. Utworzenie pliku w trybie RDWR   i otwarcie w trybie WRONLY -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <WRONLY> --close
+bin/simplefs_test --open akat/plikRDWR 2  --close
 
 19. Utworzenie pliku w trybie RDWR   i otwarcie w trybie RDWR   -> (deskryptor pliku)
-./main --mount nazwa --mkfile /plik1 <RDWR> --open /plik1 <RDWR> --close
+bin/simplefs_test --open akat/plikRDWR 3  --close
 
 20. Dwukrotne otworzenie istniejącego pliku -> (SFS_EOPENED)
-./main --mount nazwa --mkfile /plik1 <mode> --open /plik1 <mode> --open /plik1 <mode> --close
+bin/simplefs_test --open plik 1 --open plik 1 --close
 
 21. Uwtorzenie nieistniejącego pliku z nazwą o długości 50 znaków -> (SFS_NAME_TO_LONG)
-./main --mount nazwa --mkfile /abcdefghijklmnoprtsuwxyz1234567890abcxyzhuehihitralalalalala <mode>
+bin/simplefs_test --mkfile abcdefghijklmnoprtsuwxyz1234567890abcxyzhuehihitralalalalala 3
 
 22. Uwtorzenie nieistniejącego pliku z wyspecyfikowaniem w ścieżce nieistniejącego katalogu -> (SFS_BAD_PATH)
-./main --mount nazwa --mkfile /nie_ma_tego_dir/plik1 <mode>
+bin/simplefs_test --mkfile /nie_ma_tego_dir/plik1 3
 
-23. Otworzenie niestniejącego pliku -> (SFS_NOT_FOUND)
-./main --mount nazwa --open /nie_ma_tego_pliku <mode>
+23. Otworzenie nieistniejącego pliku -> (SFS_NOT_FOUND)
+bin/simplefs_test --open /nie_ma_tego_pliku 3
 
 24. Utworzenie niestniejącego pliku z pustą nazwą ->(SFS_BAD_NAME)
-./main --mount nazwa --open / <mode>
+bin/simplefs_test --open "" 3
 
 25. Otworzenie istniejacego pliku i zamkniecie go -> (SFS_OK)
-./main --mount nazwa --open /plik <mode> --close
+bin/simplefs_test --open plik 1 --close
 
 26. Zamkniecie pliku o deskryptorze określonym liczbą ujemną -> (SFS_BAD_DESC)
-./main --mount nazwa --close
+bin/simplefs_test --close
 [fd w main.c jest na samym poczatku inicjalizowany wartoscia "-1", zatem tutaj zostanei wywolany simplefs_close(-1);]
 
 27. Zamkniecie nieotworzonego pliku, który nie jest aktualnie otworzony przez zaden inny proces -> (SFS_EDESC)
+???
 
 28. Zamknięcie nieotworzonego pliku, który jest aktualnie otworzony przez inny proces -> (SFS_ECLOSED)
+???
 
-29. Odmontowanie pliku sfs i otworzenie istniejacego pliku -> (SFS_VDFAULT)
+29. Otworzenie katalogu w trybie RDONLY -> (SFS_NOT_FOUND)
+bin/simplefs_test --open katalog 1
+
+30. Otworzenie katalogu w trybie WRONLY -> (SFS_NOT_FOUND)
+bin/simplefs_test --open katalog 2
+
+31. Otworzenie katalogu w trybie RDWR -> (SFS_NOT_FOUND)
+bin/simplefs_test --open katalog 3
+
+32. Odmontowanie pliku sfs i otworzenie istniejacego pliku -> (SFS_VDFAULT)
+bin/simplefs_test --umount --open plik 1
+
+33. Sprawdzenie
+bin/simplefs_test --stat sfs1
+bin/simplefs_test --listdir ""
+bin/simplefs_test --listdir katalog
+bin/simplefs_test --listdir katalog/katalog2
+bin/simplefs_test --listdir akat
+bin/simplefs_test --printinodes
 
 V. READ/WRITE/LSEEK
 
   Uwagi:
-  Testy 1-16 nalezy wykonywac po udanym zamontowaniu pliku sfs (po wykonaniu simplefs_mount()).
+  Testy 1-20 nalezy wykonywac po udanym zamontowaniu pliku sfs (po wykonaniu simplefs_mount()).
   Przy każdym teście należy także wcześniej otworzyć plik, a po wykonaniu odczytu/zapisu/repozycjonowania zamknąć go.
   Po każdym teście należy sprawdzić zawartość superbloku, map bloków i rozmiary plików.
   (ze szczególnym naciskiem na zajęte bloki przed i po wykonaniu operacji).
   Należy dokładnie sprawdzić odczytywaną i zapisywaną zawartość oraz kontrolować pozycję z której odbywa się odczyt/zapis
 
-1. Odczyt pustego pliku -> (SFS_EOF)
+0. Przygotowanie:
+// Powinien być zamontowany sfs1 z poprzednich testow, ew. utworzony i zamontowany nowy sfs
+// Dodatkowo potrzebne będą plik zewnętrzne:
+// external3K o rozmiarze 3 000 B
+// external1M o rozmiarze 1 000 000 B
+// external20M o rozmiarze 20 000 000 B
+// <exmf1> - plik z grafiką/multimediami o rozmiarze około 20 KB
+// <exmf2> - plik z grafiką/multimediami o rozmiarze około 3 MB
+// buf10B - plik z zawartością "ABCDEFGHIJ"
+  
+1. Odczyt pustego pliku 1000 B -> (SFS_EOF)
 
-2. Odczyt pliku o rozmiarze do 28672 B -> (liczba odczytanych bajtów)
+bin/simplefs_test --open plik 7 --cpfromsfs external1 1000 --close
 
-3. Odczyt pliku o rozmiarze ponad 28672 B (odczyt z bloków pośrednich)-> (liczba odczytanych bajtów)
+2. Zapis do pustego pliku 3000 B -> (liczba zapisanych bajtów = 3000, rozmiar pliku = 3000)
 
-4. Odczyt z pliku więcej bajtów niż wynosi rozmiar pliku -> (liczba odczytanych bajtów)
+bin/simplefs_test --open plik 2 --cptosfs external3K 3000 --close
+bin/simplefs_test --stat sfs1 --printinodes
 
-5. Odczyt z pliku otworzonego w trybie WRONLY -> (SFS_EACCESS)
+3. Zapis do pliku 3000 B w pozycji 2000 -> (liczba zapisanych bajtów = 3000, rozmiar pliku = 5000)
 
-6. Zapis do pustego pliku -> (liczba zapisanych bajtów)
+bin/simplefs_test --open plik 2 --seek 0 2000 --cptosfs external3K 3000 --close
+bin/simplefs_test --stat sfs1 --printinodes
 
-7. Zapis do pliku mniej niż 28672 B -> (liczba zapisanych bajtów)
+4. Zapis do pliku 3000 B w pozycji 6000 -> (liczba zapisanych bajtów = 3000, rozmiar pliku = 8000)
 
-8. Zapis do pliku ponad 28672 B (wykorzystanie bloków pośrednich)-> (liczba zapisanych bajtów)
+bin/simplefs_test --open plik 2 --seek 2 2000 --cptosfs external3K 3000 --close
+bin/simplefs_test --stat sfs1 --printinodes
 
-9. Zapis do pliku ponad 8417280 B (więcej niż wynosi maksymalny rozmar pliku) -> (liczba zapisanych bajtów)
+5. Odczyt z pliku 1000 B (rozmiar pliku 8000)-> (liczba odczytanych bajtów = 1000)
 
-10. Zapis do pliku otworzonego w trybie tylko do odczytu -> (SFS_EACCESS)
+bin/simplefs_test --open plik 1 --cpfromsfs external5 1000 --close
 
-11. Ustawienie pozycji w pliku względem początku pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+6. Odczyt z pliku 8000 B (rozmiar pliku 8000)-> (liczba odczytanych bajtów = 8000)
 
-12. Ustawienie pozycji w pliku względem aktualnej pozycji w pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+bin/simplefs_test --open plik 1 --cpfromsfs external6 8000 --close
 
-13. Ustawienie pozycji w pliku względem końca pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+7. Odczyt z pliku 9000 B (rozmiar pliku 8000)-> (liczba odczytanych bajtów = 8000)
 
-14. Ustawienie pozycji w pliku na < 0 i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+bin/simplefs_test --open plik 1 --cpfromsfs external7 9000 --close
 
-15. Ustawienie pozycji w pliku na > rozmiar pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+8. Zapis do pliku 1 000 000 B -> (liczba zapisanych bajtów = 1 000 000, rozmiar pliku = 1 000 000)
+
+bin/simplefs_test --open plik 2 --cptosfs external1M 1000000 --close
+bin/simplefs_test --stat sfs1 --printinodes
+
+9. Odczyt z pliku 1 000 000 B (rozmiar pliku 1 000 000)-> (liczba odczytanych bajtów = 1 000 000)
+
+bin/simplefs_test --open plik 1 --cpfromsfs external9 1000000 --close
+
+10. Zapis do pliku 20 000 000 B -> (liczba zapisanych bajtów = 8417280, rozmiar pliku = 8417280)
+
+bin/simplefs_test --open maxplik 7 --cptosfs external20M 20000000 --close
+bin/simplefs_test --stat sfs1 --printinodes
+
+11. Odczyt z pliku 8417280 B (rozmiar pliku 8417280)-> (liczba odczytanych bajtów = 8417280)
+
+bin/simplefs_test --open maxplik 1 --cpfromsfs external11 8417280 --close
+
+12. Weryfikacja poprawności odczytu/zapisu w blokach bezpośrednich:
+Zapis z <exmf1> na sfs1 i odczyt -> wyjściowy plik = wejściowy
+
+bin/simplefs_test --open tmp1 7 --cptosfs <exmf1> <rozmiar exmf1> --close
+bin/simplefs_test --open tmp1 1 --cpfromsfs <exmf1.kopia> <rozmiar exmf1> --close
+bin/simplefs_test --stat sfs1 --printinodes
+
+
+13. Weryfikacja poprawności odczytu/zapisu w blokach pośrednich:
+Zapis z <exmf2> na sfs1 i odczyt -> wyjściowy plik = wejściowy
+
+bin/simplefs_test --open tmp2 7 --cptosfs <exmf2> <rozmiar exmf2> --close
+bin/simplefs_test --open tmp2 1 --cpfromsfs <exmf2.kopia> <rozmiar exmf2> --close
+bin/simplefs_test --stat sfs1 --printinodes
+
+14. Odczyt z pliku otworzonego w trybie WRONLY -> (SFS_EACCESS)
+
+bin/simplefs_test --open plik 2 --cpfromsfs external1 1000 --close
+
+15. Zapis do pliku otworzonego w trybie tylko do odczytu -> (SFS_EACCESS)
+
+bin/simplefs_test --open plik 1 --cptosfs external3K 1000 --close
 
 16. Ustawienie pozycji w pliku z parametrem innym niż SET, CUR oraz END -> (SFS_BAD_OPTION)
+
+bin/simplefs_test --open plik 3 --seek 13 17 --close
+
+17. Ustawienie pozycji w pliku na 15 względem początku pliku i próbny odczyt/zapis 10 B -> (aktualna pozycja w pliku)
+
+bin/simplefs_test --open plik 3 --seek 0 15 --cptosfs buf10B 10 --seek 1 m10 --cpfromsfs external17 10 --close
+
+18. Ustawienie pozycji w pliku względem końca pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
+bin/simplefs_test --open plik 3 --seek 2 m15 --cptosfs buf10B 10 --seek 2 m15 --cpfromsfs external18 10 --close
+
+19. Ustawienie pozycji w pliku na < 0 i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
+bin/simplefs_test --open plik 3 --seek 0 m15 --cptosfs buf10B 10 --seek 0 m10 --cpfromsfs external19 10 --close
+
+20. Ustawienie pozycji w pliku na > rozmiar pliku i próbny odczyt/zapis -> (aktualna pozycja w pliku)
+
+bin/simplefs_test --printinodes
+bin/simplefs_test --open plik 3 --seek 2 15 --cptosfs buf10B 10 --seek 2 m10 --cpfromsfs external20 10 --close
+bin/simplefs_test --printinodes
 
 VI. UNLINK
 
@@ -180,11 +321,95 @@ VI. UNLINK
   Po każdym teście należy sprawdzić zawartość superbloku, map inodów i bloków, wykorzystane inody i zawartości katalogów
   (ze szczególnym naciskiem na zajęte bloki, inody i zawartości katalogów przed i po wykonaniu operacji).
 
+0. Przygotowanie:
+// Będziemy usuwać produkty poprzednich grup testów
+  
 1. Usunięcie istniejącego pustego pliku -> (SFS_OK)
-2. Usunięcie istniejącego pliku z wykorzystywanymi blokami bezposrednimi (rozmiar <= 28672 B) -> (SFS_OK)
-3. Usunięcie istniejącego pliku z wykorzystywanymi blokami posrednimi (rozmiar > 28672 B) -> (SFS_OK)
-4. Usunięcie niestniejącego pliku -> (SFS_NOT_FOUND)
-5. Usunięcie nieistniejącego katalogu -> (SFS_NOT_FOUND)
+
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+bin/simplefs_test --mkfile empty 3 --close --rm empty
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
+2. Usunięcie istniejącego pliku z wykorzystywanymi blokami posrednimi (rozmiar > 28672 B) -> (SFS_OK)
+
+bin/simplefs_test --rm plik
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
+3. Usunięcie niestniejącego pliku/katalogu -> (SFS_NOT_FOUND)
+
+bin/simplefs_test --rm nie_ma_takiego_pliku
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
+
 6. Usunięcie katalogu root -> (SFS_BAD_NAME)
+
+bin/simplefs_test --rm ""
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
 7. Usunięcie istniejącego pustego katalogu -> (SFS_OK)
+
+bin/simplefs_test --mkdir pusty_kat --rm pusty_kat
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
+
 8. Usunięcie istniejącego katalogu zawierajacego pliki puste, pliki z zaalokowanymi blokami bezpośrednimi i pośrednimi, podkatalogi -> (SFS_OK) 
+
+bin/simplefs_test --rm katalog
+bin/simplefs_test --stat sfs1 --printinodes --listdir ""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
