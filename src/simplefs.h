@@ -28,6 +28,9 @@
 #define SFS_BAD_OPTION		-13	// Niepoprawny argument funkcji
 #define SFS_BAD_DESC		-14	// Niepoprawny deskryptor pliku
 #define SFS_VDFAULT		-15	// Blad dostepu do pliku zawierajacego sfs
+#define SFS_EMOUNT		-16	// Niepowodzenie przy montowaniu sfs (nie udalo się utworzyc hardlinka do pliku sfs)
+#define SFS_EINIT		-17	// Niepowodzenie przy montowaniu sfs (nie udalo się utworzyc procesu fs_init)
+#define SFS_ESYNC		-18	// Blad synchronizacji z token ringiem
 
 int simplefs_make(char* name, int blocks_per_inode);
 
