@@ -1,0 +1,16 @@
+1) normal 1 proces
+2) normal n procesow
+3) kilka procesow, ktore koncza robote zanim zaczna sie nastepne
+4) n procesow robi swoje, nagle trzaska umount gdziers w srodku
+5) kilkukrotne wywolanie umount przy zainicjowanym fifo
+6) kilkukrotne wywolanie init
+7) 1 proces chce podpiac sie pod nieistniejacy init
+8) n procesow chce podpiac sie pod nieistniejacy init
+9) init + umount, bez procesow
+10) wywolanie umount przy niezainicjowanym fifo
+11) wywolanie n procesow, ubicie paru z nich w trakcie (rozne warianty?)
+
+12) 3 procesy robiace rozne rzeczy (proc1, proc2, proc3) jednoczesnie w roznych czasach na zainicjowanym fifo (rozne warianty?)
+
+wywolanie testu i przekierowanie wynikow do pliku:
+./test3.sh > wyniki_testow/wynik_test3.txt
