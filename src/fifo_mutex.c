@@ -285,8 +285,8 @@ void initialize(struct proc_data *data, int mypid)
  **************************************************************************/
 int fifomutex_startinit()
 {
-	if(init_pid != -1)
-		return -1;
+	/*if(init_pid != -1)
+		return -1;*/
 	init_pid = fork();
 	int ret = 0;			/*exec przy udanej operacji nie zwraca nic
 					, przy bledzie -1*/
@@ -310,16 +310,13 @@ int fifomutex_startinit()
  **************************************************************************/
 int fifomutex_umount()
 {
+	sleep(1);
 	struct fifo_msg msg;
 	int tmpfifo_fd = -1;
-	int count = 0;
-	while((tmpfifo_fd = open(initfifo_name, O_WRONLY)) == -1)
+	if((tmpfifo_fd = open(initfifo_name, O_WRONLY)) == -1)
 	{
-		printf("Fifomutex unmount: brak kolejki init %d", count);
-		if(count>4)
-			return -1;
-		count++;
-		sleep(1);
+		printf("Fifomutex unmount: brak kolejki init");
+		return -1;	
 	}
 	msg.type = UNMOUNT_PREPARE;
 	msg.code = 0;
