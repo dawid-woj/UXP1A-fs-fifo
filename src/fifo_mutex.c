@@ -5,7 +5,7 @@
  **************************************************************************/
 char *initfifo_name = "initfifo";
 
-
+pid_t init_pid = -1;
 /***************************************************************************
  * API modulu
  **************************************************************************/
@@ -285,7 +285,8 @@ void initialize(struct proc_data *data, int mypid)
  **************************************************************************/
 int fifomutex_startinit()
 {
-
+	if(init_pid != -1)
+		return -1;
 	init_pid = fork();
 	int ret = 0;			/*exec przy udanej operacji nie zwraca nic
 					, przy bledzie -1*/
