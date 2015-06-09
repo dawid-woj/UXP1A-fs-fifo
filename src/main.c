@@ -22,6 +22,8 @@ Jesli chcesz przekazac ujemny argument, np. -5 nalezy pisac m5!!!
 #include <fcntl.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "simplefs.h"
 #include "simplefs_aux.h"
@@ -360,11 +362,10 @@ int cpfromsfs(int fd, const char * filename, int bytes)
   int extfd, res;
   char* buf = (char*) malloc(bytes);
   
-  extfd =  open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0x777);
+  extfd =  open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
   res = simplefs_read(fd, buf, bytes);
   write(extfd, buf, bytes);
   free(buf);
   close(extfd);
   return res;
 }
-
