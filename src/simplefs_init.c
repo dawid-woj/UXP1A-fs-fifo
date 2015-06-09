@@ -112,14 +112,12 @@ int fifomutex_init()
 				if(secondproc_pid == tmpmsg.code)
 					secondproc_pid = -1;
 				printf("nastepnik odlaczanego: %d\n", tmpmsg.code);
-				char tmpfifoname[63] = "fifo";
 				char tmpstr[20];
-				sprintf(tmpstr, "%d", msg.code);
-				//const char *tmpstr = itoa(tmpmsg.code);
-				wr_fifoname = strcat(tmpfifoname, tmpstr);
-				wrfifo_fd = open(tmpfifoname, O_WRONLY);
+				sprintf(tmpstr, "fifo%d", msg.code);
+				printf("sprintf: %s\n",tmpstr);
+				wr_fifoname = tmpstr;
+				wrfifo_fd = open(wr_fifoname, O_WRONLY);
 				wr_pid = tmpmsg.code;
-				
 			}
 			
 		}
@@ -189,11 +187,11 @@ void ino_writers_error()
 
 void u_linkreq()
 {
-	char tmpfifoname[80] = "fifo";
 	char tmpstr[20];
-	sprintf(tmpstr, "%d", msg.code);
+	sprintf(tmpstr, "fifo%d", msg.code);
+	printf("sprintf: %s\n",tmpstr);
 	//const char *tmpstr = itoa(msg.code);
-	char *temp_fifoname = strcat(tmpfifoname, tmpstr);
+	char *temp_fifoname = tmpstr;
 	printf("# INIT #: odmawia LINK pid: %d\n", msg.code);
 	int tmpfifo_fd = open(temp_fifoname, O_WRONLY);
 	msg.type = UNMOUNT_EXECUTE;
@@ -206,10 +204,9 @@ void iadd_new_proc()
 {
 	//char tmpfifoname[80] = "fifos/fifo";
 	char tmpstr[20];
-	sprintf(tmpstr, "%d", msg.code);
-	char tmpfifoname[80] = "fifo";
-	//const char *tmpstr = itoa(msg.code);
-	wr_fifoname = strcat(tmpfifoname, tmpstr);
+	sprintf(tmpstr, "fifo%d", msg.code);
+	printf("sprintf: %s\n",tmpstr);
+	wr_fifoname = tmpstr;
 	wr_pid = msg.code;
 	printf("kolejka do pisania inita:\n %s\n",wr_fifoname);
 	wrfifo_fd = open(wr_fifoname, O_WRONLY);

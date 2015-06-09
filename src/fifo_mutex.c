@@ -151,6 +151,7 @@ int fifomutex_unlock(struct proc_data *data)
 	{
 		printf("Proces pid: %d - kolejka fifo nie istnieje\n",mypid);
 		clear_fifos(data);
+		free(data->myfifo_name);
 		return(-1);
 	}
 	printf("Proces %d, wysyla UNLINK\n", mypid);
@@ -162,6 +163,7 @@ int fifomutex_unlock(struct proc_data *data)
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
 			no_writers_error(data, mypid);
+			free(data->myfifo_name);
 			return -2;
 		}	
 		
@@ -185,7 +187,8 @@ int fifomutex_unlock(struct proc_data *data)
 			if(msg.code == data->nextproc_pid)
 			{
 				printf("Proces %d, UNLINK od siebie, odsyla token\n", mypid);	/* gdy wróci mój unlink to oddaję token i zamykam kolejki*/
-				fifo_unlink(mypid, data, &msg);			
+				fifo_unlink(mypid, data, &msg);	
+				free(data->myfifo_name);		
 				return(0);
 			}
 			else
@@ -204,11 +207,13 @@ int fifomutex_unlock(struct proc_data *data)
 			printf("Proces %d, UNMOUNT_EXECUTE\n", mypid);
 			write(data->wrfifo_fd, (char*)&msg, sizeof(msg));	
 			clear_fifos(data);
+			free(data->myfifo_name);
 			return -1;
 		}
 		else if(msg.type == NO_WRITERS)
 		{
 			no_writers_error(data, mypid);
+			free(data->myfifo_name);
 			return -2;
 		}
 	}
@@ -227,12 +232,11 @@ void no_writers_error(struct proc_data *data, int mypid)	/*przesylam dalej komun
 void add_new_proc(struct proc_data *data, struct fifo_msg *msg)
 {
 	int tmpfifo_fd = data->wrfifo_fd;
-	///*char */fifopath = "fifos/fifo";
-	char fifopath[20] = "fifo";
 	char *tmpfifoname;
 	char tmpstr[20];
-	sprintf(tmpstr, "%d", msg->code);
-	tmpfifoname = strcat(fifopath, tmpstr);
+	sprintf(tmpstr, "fifo%d", msg->code);
+	printf("sprintf: %s\n",tmpstr);
+	tmpfifoname = tmpstr;
 	printf("teraz pisze do: %s\n", tmpfifoname);
 	data->nextproc_pid = msg->code;
 	data->wrfifo_fd = open(tmpfifoname, O_WRONLY);
@@ -254,7 +258,7 @@ void clear_fifos(struct proc_data *data)
 	close(data->wrfifo_fd);
 	close(data->myfifo_fd);
 	unlink(data->myfifo_name);
-	free(data->myfifo_name);
+	
 	data->wrfifo_fd = -1;
 	data->myfifo_fd = -1;
 }
@@ -264,12 +268,11 @@ void initialize(struct proc_data *data, int mypid)
 {
 	
 	char tmpstr[20];
-	sprintf(tmpstr, "%d", mypid);
-
+	sprintf(tmpstr, "fifo%d", mypid);
+	printf("sprintf: %s\n",tmpstr);
 	char *fifopath = malloc(20*sizeof(char));
-	char *fifo = "fifo";
-	memcpy(fifopath, fifo, 4);
-	data->myfifo_name = strcat(fifopath, tmpstr);
+	memcpy(fifopath, tmpstr, 20);
+	data->myfifo_name = fifopath;
 	
 }
 
@@ -319,6 +322,7 @@ int fifomutex_startinit()
 	int tmp_fd = open("sync_fifo", O_RDONLY);
 	read(tmp_fd, (char*)&msg, sizeof(msg));
 	close(tmp_fd);
+	unlink("sync_fifo");
 	puts("zamykam kolejkę synchronizującą");
 
 	return ret;
