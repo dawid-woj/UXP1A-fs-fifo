@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test podpiecie 4 procesow (lock, usleep(x), unlock) do inita i ubicie jednego w trakcie'
 echo 'Tworze fifoinit'
-../../bin/simplefs_init &
+./openinit 
 INIT_PID=$!
 sleep 1s
 echo 'Tworze 4 procesy i ubijam jakiegos'
@@ -13,7 +13,6 @@ PID2=$!
 PID3=$!
 ./process 2000000 &
 PID4=$!
-sleep 1s
 kill $PID2
 wait $PID1 
 wait $PID2

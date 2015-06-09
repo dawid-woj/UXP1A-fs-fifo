@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test normalne podpiecie 4 procesow (lock, usleep(x), unlock) do inita'
 echo 'Tworze fifoinit'
-../../bin/simplefs_init &
+./openinit 
 INIT_PID=$!
 #sleep 1s
 echo 'Uruchamiam 4 procesy'

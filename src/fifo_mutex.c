@@ -285,8 +285,26 @@ void initialize(struct proc_data *data, int mypid)
  **************************************************************************/
 int fifomutex_startinit()
 {
-	/*if(init_pid != -1)
-		return -1;*/
+	/*printf("sprawdzam czy istnieje proces o pid:%d\n",init_pid);
+	kill(init_pid, 0);
+	if(errno != ESRCH)
+	{
+		puts("isnieje - koncze");
+		return -1;
+	}
+	puts("nie isnieje - tworze init");*/
+
+	puts("sprawdzam czy istnieje proces init");
+	int tmp;
+	if((tmp = open(initfifo_name, O_RDONLY)) != -1)
+	{
+		puts("istnieje");
+		close(tmp);
+		return(-1);
+	}
+	puts("nie isnieje - tworze init");
+	close(tmp);
+
 	init_pid = fork();
 	int ret = 0;			/*exec przy udanej operacji nie zwraca nic
 					, przy bledzie -1*/
@@ -295,6 +313,13 @@ int fifomutex_startinit()
 		ret = execl("./simplefs_init", "simplefs_init", (char*)0);
 		return ret;
 	}
+	
+	struct fifo_msg msg;
+	mkfifo("sync_fifo", 0666);			/*tworzy własnie fifo i wysyła link do inita*/
+	int tmp_fd = open("sync_fifo", O_RDONLY);
+	read(tmp_fd, (char*)&msg, sizeof(msg));
+	close(tmp_fd);
+
 	return ret;
 }
 
@@ -310,12 +335,12 @@ int fifomutex_startinit()
  **************************************************************************/
 int fifomutex_umount()
 {
-	sleep(1);
+
 	struct fifo_msg msg;
 	int tmpfifo_fd = -1;
 	if((tmpfifo_fd = open(initfifo_name, O_WRONLY)) == -1)
 	{
-		printf("Fifomutex unmount: brak kolejki init");
+		puts("Fifomutex unmount: brak kolejki init");
 		return -1;	
 	}
 	msg.type = UNMOUNT_PREPARE;

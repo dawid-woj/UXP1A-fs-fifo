@@ -42,7 +42,7 @@ INIT = ../../bin/simplefs_init
 
 .PHONY: clean
 
-all:    process init closeinit proc1 proc2 proc3
+all:    process init closeinit proc1 proc2 proc3 openinit
 	@echo  Testing module has been compiled
 	
 #refresh:
@@ -95,6 +95,9 @@ init: ../../src/simplefs_init.o
 
 closeinit: closeinit.c
 	$(CC) $(CFLAGS) closeinit.c -o closeinit ../../src/fifo_mutex.o -I ../../src/	
+
+openinit: openinit.c
+	$(CC) $(CFLAGS) openinit.c -o openinit ../../src/fifo_mutex.o -I ../../src/	
 
 
 

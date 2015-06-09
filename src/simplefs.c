@@ -59,6 +59,7 @@ int simplefs_mount(char* name)
   {
     return SFS_EINIT;
   }
+
   if (link(name, SFS_LINK_NAME) < 0)
   {
     fifomutex_umount();

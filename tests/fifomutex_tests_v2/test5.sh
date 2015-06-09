@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test kilkukrotne wywolanie unmount'
 echo 'Tworze fifoinit'
-../../bin/simplefs_init &
+./openinit 
 INIT_PID=$!
 sleep 1s
 echo 'Unmount x3'

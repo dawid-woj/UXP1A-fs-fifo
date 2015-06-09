@@ -47,8 +47,13 @@ int fifomutex_init()
 	puts("otwieram fifo");
 	mkfifo(initfifo_name, 0666);
 	initfifo_fd = open(initfifo_name, O_RDONLY);
-	puts("czekam na pierwszego");
 
+	int tmp_fd = open("sync_fifo", O_WRONLY);
+	msg.type = LINK;
+	msg.code = -1;
+	write(tmp_fd, (char*)&msg, sizeof(msg));	
+	close(tmp_fd);
+	puts("czekam na pierwszego");	
 	while(1)
 	{
 		

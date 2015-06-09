@@ -1,7 +1,7 @@
 #ifndef SFS_VD_H_
 #define SFS_VD_H_
 
-#define SFS_LINK_NAME		"/tmp/sfsfile"	// Nazwa twardego dowiazania do pliku SFS
+#define SFS_LINK_NAME		"./tmp/sfsfile"	// Nazwa twardego dowiazania do pliku SFS
 #define	SFS_BLOCK_SIZE		4096	// Rozmiar bloku danych w bajtach
 #define SFS_FILE		1	// Plik zwykly
 #define SFS_DIRECTORY		2	// Katalog

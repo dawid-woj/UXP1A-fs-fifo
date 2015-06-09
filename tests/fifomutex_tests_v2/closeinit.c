@@ -2,13 +2,10 @@
 
 int main()
 {	
-	int cnt=0;
-	while(fifomutex_umount()!=0)
+	if(fifomutex_umount()!=0)
 	{
-		if(cnt>4)
-			break;
-		cnt++;
-		sleep(1);
+		puts("Nie mozna zakmnkac inita - nie istnieje fifoinit");
+		return -1;
 	}
 	return 0;
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test podpiecie 3 procesow robiacych rozne rzeczy do inita'
 echo 'Tworze fifoinit'
-../../bin/simplefs_init &
+./openinit 
 INIT_PID=$!
 echo 'Tworze 3 procesy'
 ./proc1 &

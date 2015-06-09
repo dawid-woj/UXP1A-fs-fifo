@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test podpiecie 3 procesow (lock, usleep(x), unlock) do inita, potem umount, potem proba kolejnych 3 procesow'
 echo 'Tworze fifoinit'
-../../bin/simplefs_init &
+./openinit 
 INIT_PID=$!
 #sleep 1s
 echo 'Uruchamiam 3 procesy'
