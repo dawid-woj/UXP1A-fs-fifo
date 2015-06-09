@@ -44,16 +44,16 @@ int fifomutex_init()
 {
 	
 	//utworz plik o nazwie $name
-	puts("otwieram fifo");
+	puts("# INIT # otwieram fifo");
 	mkfifo(initfifo_name, 0666);
-	initfifo_fd = open(initfifo_name, O_RDONLY);
-
+	initfifo_fd = open(initfifo_name, O_RDWR);
+	puts("# INIT # otwieram fifo synchronizujace");
 	int tmp_fd = open("sync_fifo", O_WRONLY);
 	msg.type = LINK;
 	msg.code = -1;
 	write(tmp_fd, (char*)&msg, sizeof(msg));	
 	close(tmp_fd);
-	puts("czekam na pierwszego");	
+	puts("# INIT # czekam na pierwszego");	
 	while(1)
 	{
 		

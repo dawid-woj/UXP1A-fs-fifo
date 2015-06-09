@@ -294,7 +294,7 @@ int fifomutex_startinit()
 	}
 	puts("nie isnieje - tworze init");*/
 
-	puts("sprawdzam czy istnieje proces init");
+	/*puts("sprawdzam czy istnieje proces init");
 	int tmp;
 	if((tmp = open(initfifo_name, O_RDONLY)) != -1)
 	{
@@ -303,7 +303,7 @@ int fifomutex_startinit()
 		return(-1);
 	}
 	puts("nie isnieje - tworze init");
-	close(tmp);
+	close(tmp);*/
 
 	init_pid = fork();
 	int ret = 0;			/*exec przy udanej operacji nie zwraca nic
@@ -313,12 +313,13 @@ int fifomutex_startinit()
 		ret = execl("./simplefs_init", "simplefs_init", (char*)0);
 		return ret;
 	}
-	
+	puts("otwieram kolejkę synchronizującą");
 	struct fifo_msg msg;
 	mkfifo("sync_fifo", 0666);			/*tworzy własnie fifo i wysyła link do inita*/
 	int tmp_fd = open("sync_fifo", O_RDONLY);
 	read(tmp_fd, (char*)&msg, sizeof(msg));
 	close(tmp_fd);
+	puts("zamykam kolejkę synchronizującą");
 
 	return ret;
 }

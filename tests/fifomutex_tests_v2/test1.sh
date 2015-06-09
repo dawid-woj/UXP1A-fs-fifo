@@ -1,7 +1,7 @@
 #!/bin/bash
 echo 'Test normalne podpiecie 1 procesu (lock, usleep(x), unlock) do inita'
 echo 'Tworze fifoinit'
-./openinit 
+./openinit
 INIT_PID=$!
 #sleep 1s
 echo 'Uruchamiam proces'
