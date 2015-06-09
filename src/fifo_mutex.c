@@ -297,16 +297,16 @@ int fifomutex_startinit()
 	}
 	puts("nie isnieje - tworze init");*/
 
-	/*puts("sprawdzam czy istnieje proces init");
+	puts("sprawdzam czy istnieje proces init");
 	int tmp;
-	if((tmp = open(initfifo_name, O_RDONLY)) != -1)
+	if((tmp = open(initfifo_name, O_WRONLY)) != -1)
 	{
 		puts("istnieje");
 		close(tmp);
 		return(-1);
 	}
 	puts("nie isnieje - tworze init");
-	close(tmp);*/
+	close(tmp);
 
 	init_pid = fork();
 	int ret = 0;			/*exec przy udanej operacji nie zwraca nic

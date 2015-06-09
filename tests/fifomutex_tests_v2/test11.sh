@@ -3,7 +3,6 @@ echo 'Test podpiecie 4 procesow (lock, usleep(x), unlock) do inita i ubicie jedn
 echo 'Tworze fifoinit'
 ./openinit 
 INIT_PID=$!
-sleep 1s
 echo 'Tworze 4 procesy i ubijam jakiegos'
 ./process 2000000 &
 PID1=$!
@@ -13,6 +12,7 @@ PID2=$!
 PID3=$!
 ./process 2000000 &
 PID4=$!
+sleep 1s
 kill $PID2
 wait $PID1 
 wait $PID2
