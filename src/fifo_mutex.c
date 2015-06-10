@@ -299,7 +299,7 @@ int fifomutex_startinit()
 
 	puts("sprawdzam czy istnieje proces init");
 	int tmp;
-	if((tmp = open(initfifo_name, O_WRONLY)) != -1)
+	if((tmp = open(initfifo_name, O_RDWR)) != -1)
 	{
 		puts("istnieje");
 		close(tmp);
