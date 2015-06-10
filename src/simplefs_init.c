@@ -10,11 +10,16 @@
 #include <string.h>
 #include "fifo_mutex.h"
 
+#define N 512
+
 char *initfifo_name = "initfifo";
 
 int fifomutex_init();
 
-int secondproc_pid=-1;
+int pid_buf[N];	    // Bufor cykliczny procesow w token ringu
+int first_free = 0; // pierwsze wolne miejsce
+int last_taken = 0; // ostatnie zajete miejsce
+
 int initfifo_fd;
 	
 int unmount_state=0;		
@@ -24,7 +29,6 @@ int wrfifo_fd=-1;
 char *wr_fifoname;
 int wr_pid = -1;
 
-int counter = 0;
 
 void ino_writers_error();
 void u_linkreq();
@@ -43,9 +47,8 @@ int main()
 
 int fifomutex_init()
 {
-	
 	//utworz plik o nazwie $name
-	puts("# INIT # otwieram fifo");
+	puts("#INIT # otwieram fifo");
 	mkfifo(initfifo_name, 0666);
 	initfifo_fd = open(initfifo_name, O_RDWR);
 	puts("# INIT # otwieram fifo synchronizujace");
@@ -56,87 +59,76 @@ int fifomutex_init()
 	close(tmp_fd);
 	puts("# INIT # czekam na pierwszego");	
 	while(1)
-	{
-		
-		////sleep(2);
-		msg.type = -1;		
-		if(read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0 && wrfifo_fd != -1)
+	{		
+		if(read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0) /* To sie chyba nie powinno zdarzyc ??? */
 		{
+			puts("# INIT # odebrano pusty komunikat");
 			ino_writers_error();
 			return -1;
 		}
-		if(msg.type != -1)
-			printf("# INIT # type: %d code:%d\n", msg.type, msg.code);
-		
 		if(msg.type == LINK)
 		{
+			pid_buf[first_free] = msg.code;
+			first_free = (first_free + 1) % N;
 			
 			if(unmount_state == 1)
 			{
-				printf("# INIT #: LINK pid:%d - w stanie unmount\n",msg.code);
+				printf("# INIT # LINK od pid:%d - w stanie unmount - odmowa linkowania\n",msg.code);
 				u_linkreq();
 			}
 			else if(wrfifo_fd == -1)
 			{
-				printf("# INIT #: LINK pid:%d - pierwszy za init\n",msg.code);	
+				printf("# INIT # LINK od pid:%d - dodaje nowy proces za initem i przekazuje TOKEN\n",msg.code);
 				iadd_new_proc();
-				counter = 1;
 			}
 			else
 			{
-				if(counter == 1)
-					secondproc_pid = msg.code;
-				printf("# INIT #: LINK pid:%d\n",msg.code);
+				printf("# INIT # LINK od pid:%d - przekazuje dalej\n",msg.code);
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
-				counter++;
 			}
 		}
-		else if(msg.type == UNLINK && unmount_state == 0 && wr_pid != -1)
+		else if(msg.type == UNLINK)
 		{
-			printf("# INIT #: UNLINK pid:%d\n",msg.code);
-			if(msg.code == -1 && secondproc_pid != -1)
-			{
-				msg.code = secondproc_pid;
-			}
+		  
 			
-						
-			write(wrfifo_fd, (char*)&msg, sizeof(msg));
-			close(wrfifo_fd);
-				
-			struct fifo_msg tmpmsg = msg;
-			if(tmpmsg.code == -1)
-			{		
-				printf("nastepnik odlaczanego to init: %d\n", tmpmsg.code);
+			if(unmount_state)
+			{
+			  printf("# INIT # UNLINK od %d ale jestesmy w stanie umount -> ignorowanie\n", msg.upid);
+			  continue;
+			}
+
+			last_taken = (last_taken + 1) % N;
+			int tmp_fd = wrfifo_fd;
+			
+			if(last_taken == first_free) // Odlacza sie jedyny proces w pierscieniu
+			{
+				printf("# INIT # UNLINK %d i nie ma innych\n", msg.upid);
 				wr_pid = -1;
 				wrfifo_fd = -1;
-				secondproc_pid = -1;
-			}		
-			else	
-			{	
-				if(secondproc_pid == tmpmsg.code)
-					secondproc_pid = -1;
-				printf("nastepnik odlaczanego: %d\n", tmpmsg.code);
+			}
+			else // Sa inne procesy, trzeba przepiac kolejki
+			{
+				printf("# INIT # UNLINK %d - odlacza sie proces za - przepiecie kolejek\n", msg.upid);
 				char tmpstr[20];
-				sprintf(tmpstr, "fifo%d", msg.code);
-				printf("sprintf: %s\n",tmpstr);
+				sprintf(tmpstr, "fifo%d", pid_buf[last_taken]);
 				wr_fifoname = tmpstr;
 				wrfifo_fd = open(wr_fifoname, O_WRONLY);
-				wr_pid = tmpmsg.code;
+				wr_pid = pid_buf[last_taken];
 			}
-			counter--;
-			
+			write(tmp_fd, (char*)&msg, sizeof(msg));
+			close(tmp_fd);
 		}
-		else if(msg.type == TOKEN && unmount_state == 0)
+		else if(msg.type == TOKEN)
 		{
-			printf("# INIT #: TOKEN \n");
 			if(wr_pid != -1 && unmount_state == 0)
 			{
+				printf("# INIT # TOKEN od %d wrocil do inita - przekazujemy dalej\n", msg.upid);
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == UNMOUNT_PREPARE)
 		{
-			printf("# INIT #: UNMOUNT_PREPARE \n");
+			printf("# INIT # UNMOUNT_PREPARE \n");
 			start_unmount();
 			if(wr_pid == -1)
 			{
@@ -146,14 +138,20 @@ int fifomutex_init()
 		}
 		else if(msg.type == UNMOUNT_EXECUTE)
 		{
-			printf("# INIT #: UNMOUNT_EXECUTE - konczy sie init \n");
+			printf("# INIT # UNMOUNT_EXECUTE - konczy sie init \n");
 			close(initfifo_fd);
 			
 			exit(0);
 		}
 		else if(msg.type == NO_WRITERS)
 		{
+			printf("# INIT # NO_WRITERS\n");
 			no_writers_msg();
+			last_taken = first_free = 0;
+		}
+		else
+		{
+		  printf("# INIT # Nieprzewidziana sytuacja - type:%d, code: %d, upid: %d!!!\n", msg.type, msg.code, msg.upid);
 		}
 	}
 	
@@ -161,12 +159,11 @@ int fifomutex_init()
 
 void no_writers_msg()
 {
-	wr_pid = -1;
-	wrfifo_fd = -1;
-	secondproc_pid = -1;
-	counter = 0;
+	
 	write(wrfifo_fd, (char*)&msg, sizeof(msg));
 	close(wrfifo_fd);
+	wr_pid = -1;
+	wrfifo_fd = -1;
 }
 
 void start_unmount()
@@ -186,20 +183,13 @@ void ino_writers_error()
 	tmp.code = -1;
 	write(wrfifo_fd, (char*)&tmp, sizeof(tmp));
 	close(wrfifo_fd);
-	/*wr_pid = -1;
-	wrfifo_fd = -1;
-	secondproc_pid = -1;*/
-	counter = 0;
 }
 
 void u_linkreq()
 {
 	char tmpstr[20];
 	sprintf(tmpstr, "fifo%d", msg.code);
-	printf("sprintf: %s\n",tmpstr);
-	//const char *tmpstr = itoa(msg.code);
 	char *temp_fifoname = tmpstr;
-	printf("# INIT #: odmawia LINK pid: %d\n", msg.code);
 	int tmpfifo_fd = open(temp_fifoname, O_WRONLY);
 	msg.type = UNMOUNT_EXECUTE;
 	msg.code = 0;
@@ -209,17 +199,13 @@ void u_linkreq()
 
 void iadd_new_proc()
 {
-	//char tmpfifoname[80] = "fifos/fifo";
 	char tmpstr[20];
 	sprintf(tmpstr, "fifo%d", msg.code);
-	printf("sprintf: %s\n",tmpstr);
 	wr_fifoname = tmpstr;
 	wr_pid = msg.code;
-	printf("kolejka do pisania inita:\n %s\n",wr_fifoname);
 	wrfifo_fd = open(wr_fifoname, O_WRONLY);
-	write(wrfifo_fd, (char*)&msg, sizeof(msg));
-				
+	write(wrfifo_fd, (char*)&msg, sizeof(msg));		
 	msg.type=TOKEN;
-	msg.code=99999;
+	msg.code=-1;
 	write(wrfifo_fd, (char*)&msg, sizeof(msg));
 }
