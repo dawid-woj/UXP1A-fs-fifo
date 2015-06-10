@@ -289,27 +289,27 @@ int main(int argc, char **argv)
 			// close
 			case 'c':
 				status = simplefs_close(fd);
-				printf("simplefs_close(fd)\n");
+				printf("simplefs_close(%d)\n", fd);
 				printf("Operation status = %d\n", status);
 				break;
 			// seek whence offset
 			case 's':
 				status = simplefs_lseek(fd, (int)strToNumber(optarg), (int)strToNumber(argv[optind]));
-				printf("simplefs_lseek(fd, %d, %d)\n", (int)strToNumber(optarg), (int)strToNumber(argv[optind]));
+				printf("simplefs_lseek(%d, %d, %d)\n", fd, (int)strToNumber(optarg), (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
 			// cptosfs filename value
 			case 't':
 				status = cptosfs(fd, optarg, (int)strToNumber(argv[optind]));
-				printf("cptosfs(fd, %s, %d)\n", optarg, (int)strToNumber(argv[optind]));
+				printf("cptosfs(%d, %s, %d)\n", fd, optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				++optind;
 				break;
 			// cpfromsfs filename value
 			case 'p':
 				status = cpfromsfs(fd, optarg, (int)strToNumber(argv[optind]));
-				printf("cpfromsfs(fd, %s, %d)\n", optarg, (int)strToNumber(argv[optind]));
+				printf("cpfromsfs(%d, %s, %d)\n", fd, optarg, (int)strToNumber(argv[optind]));
 				printf("Operation status = %d\n", status);
 				break;
 			// sleep seconds
