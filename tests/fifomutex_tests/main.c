@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {	
-	int cnt = 0;
+	/*int cnt = 0;
 	int ret = -10000;
 	struct proc_data pd;
 	//signal(SIGPIPE, SIG_IGN);
@@ -42,9 +42,23 @@ int main(int argc, char *argv[])
 	sleep(3);
 	if(argc >= 2 && (strcmp(argv[1], "-u") == 0))
 	{
-		fifomutex_unlock(&pd);
+		c);
 	}
 	else if(cnt<=3)
-		fifomutex_unlock(&pd);
+		fifomutex_unlock(&pd);*/
+	struct proc_data pd;
+	fifomutex_lock(&pd);
+	printf("		Proces pracuje");
+	usleep(200);
+	fifomutex_unlock(&pd);
+
+	sleep(1);
+	
+	fifomutex_lock(&pd);
+
+	printf("		Proces pracuje");
+	usleep(50);
+	fifomutex_unlock(&pd);
+
 	return 0;
 }

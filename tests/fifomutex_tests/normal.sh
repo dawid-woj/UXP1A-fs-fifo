@@ -1,8 +1,12 @@
 echo Tworze fifoinit
-../../bin/simplefs_init &
+./openinit
 INIT_PID=$!
-echo Tworze 1 proces
 sleep 3s
+./process &
+./process &
+./process &
+sleep 1s
+./process &
 ./process &
 PID1=$!
 wait $PID1 

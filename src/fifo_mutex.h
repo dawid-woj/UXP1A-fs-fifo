@@ -25,6 +25,7 @@ struct fifo_msg
 {
   int type;
   int code;
+  int mpid;
 };
 
 

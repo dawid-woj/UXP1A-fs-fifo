@@ -146,6 +146,7 @@ int fifomutex_unlock(struct proc_data *data)
 	struct fifo_msg unlinkmsg;	/* wysyłam unlink i czekam na jego powrót,w międzyczasie obsługuję inne komunikaty*/
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = data->nextproc_pid;
+	unlinkmsg.mpid = mypid;
 	write(data->wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
 	if(data->wrfifo_fd == -1)
 	{
@@ -184,7 +185,7 @@ int fifomutex_unlock(struct proc_data *data)
 		else if(msg.type == UNLINK)
 		{
 			
-			if(msg.code == data->nextproc_pid)
+			if(msg.mpid == mypid)
 			{
 				printf("Proces %d, UNLINK od siebie, odsyla token\n", mypid);	/* gdy wróci mój unlink to oddaję token i zamykam kolejki*/
 				fifo_unlink(mypid, data, &msg);	

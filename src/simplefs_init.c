@@ -24,6 +24,7 @@ int wrfifo_fd=-1;
 char *wr_fifoname;
 int wr_pid = -1;
 
+int counter = 0;
 
 void ino_writers_error();
 void u_linkreq();
@@ -69,6 +70,7 @@ int fifomutex_init()
 		
 		if(msg.type == LINK)
 		{
+			
 			if(unmount_state == 1)
 			{
 				printf("# INIT #: LINK pid:%d - w stanie unmount\n",msg.code);
@@ -78,13 +80,15 @@ int fifomutex_init()
 			{
 				printf("# INIT #: LINK pid:%d - pierwszy za init\n",msg.code);	
 				iadd_new_proc();
+				counter = 1;
 			}
 			else
 			{
-				if(secondproc_pid == -1)
+				if(counter == 1)
 					secondproc_pid = msg.code;
 				printf("# INIT #: LINK pid:%d\n",msg.code);
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				counter++;
 			}
 		}
 		else if(msg.type == UNLINK && unmount_state == 0 && wr_pid != -1)
@@ -119,6 +123,7 @@ int fifomutex_init()
 				wrfifo_fd = open(wr_fifoname, O_WRONLY);
 				wr_pid = tmpmsg.code;
 			}
+			counter--;
 			
 		}
 		else if(msg.type == TOKEN && unmount_state == 0)
@@ -159,6 +164,7 @@ void no_writers_msg()
 	wr_pid = -1;
 	wrfifo_fd = -1;
 	secondproc_pid = -1;
+	counter = 0;
 	write(wrfifo_fd, (char*)&msg, sizeof(msg));
 	close(wrfifo_fd);
 }
@@ -183,6 +189,7 @@ void ino_writers_error()
 	/*wr_pid = -1;
 	wrfifo_fd = -1;
 	secondproc_pid = -1;*/
+	counter = 0;
 }
 
 void u_linkreq()
