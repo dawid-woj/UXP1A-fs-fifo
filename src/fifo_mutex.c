@@ -53,8 +53,8 @@ int fifomutex_lock(struct proc_data *data)
 	data->myfifo_fd = open(data->myfifo_name, O_RDONLY);
 	while(1)
 	{
-		//sleep(1);
-				
+		msg.type = -1;
+		msg.code = -1;
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
 			no_writers_error(data, mypid);
@@ -158,8 +158,8 @@ int fifomutex_unlock(struct proc_data *data)
 
 	while(1)
 	{
-		//sleep(1);
-		
+		msg.type = -1;
+		msg.code = -1;
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
 			no_writers_error(data, mypid);
