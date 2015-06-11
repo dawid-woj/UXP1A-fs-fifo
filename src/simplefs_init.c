@@ -48,21 +48,21 @@ int main()
 int fifomutex_init()
 {
 	//utworz plik o nazwie $name
-	puts("#INIT # otwieram fifo");
+	//puts("[FIFO] #INIT # otwieram fifo");
 	mkfifo(initfifo_name, 0666);
 	initfifo_fd = open(initfifo_name, O_RDWR);
-	puts("# INIT # otwieram fifo synchronizujace");
+	//puts("# INIT # otwieram fifo synchronizujace");
 	int tmp_fd = open("sync_fifo", O_WRONLY);
 	msg.type = LINK;
 	msg.code = -1;
 	write(tmp_fd, (char*)&msg, sizeof(msg));	
 	close(tmp_fd);
-	puts("# INIT # czekam na pierwszego");	
+	//puts("# INIT # czekam na pierwszego");	
 	while(1)
 	{		
 		if(read(initfifo_fd, (char*)&msg, sizeof(msg)) == 0) /* To sie chyba nie powinno zdarzyc ??? */
 		{
-			puts("# INIT # odebrano pusty komunikat");
+			puts("[FIFO] #INIT: odebrano pusty komunikat");
 			ino_writers_error();
 			return -1;
 		}
@@ -73,17 +73,17 @@ int fifomutex_init()
 			
 			if(unmount_state == 1)
 			{
-				printf("# INIT # LINK od pid:%d - w stanie unmount - odmowa linkowania\n",msg.code);
+				printf("[FIFO] #INIT: LINK od pid:%d - w stanie unmount - odmowa linkowania\n",msg.code);
 				u_linkreq();
 			}
 			else if(wrfifo_fd == -1)
 			{
-				printf("# INIT # LINK od pid:%d - dodaje nowy proces za initem i przekazuje TOKEN\n",msg.code);
+				//printf("[FIFO] #INIT: LINK od pid:%d - dodaje nowy proces za initem i przekazuje TOKEN\n",msg.code);
 				iadd_new_proc();
 			}
 			else
 			{
-				printf("# INIT # LINK od pid:%d - przekazuje dalej\n",msg.code);
+				//printf("[FIFO] #INIT: LINK od pid:%d - przekazuje dalej\n",msg.code);
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
@@ -93,7 +93,7 @@ int fifomutex_init()
 			
 			if(unmount_state)
 			{
-			  printf("# INIT # UNLINK od %d ale jestesmy w stanie umount -> ignorowanie\n", msg.upid);
+			  //printf("[FIFO] #INIT: UNLINK od %d ale jestesmy w stanie umount -> ignorowanie\n", msg.upid);
 			  continue;
 			}
 
@@ -102,13 +102,13 @@ int fifomutex_init()
 			
 			if(last_taken == first_free) // Odlacza sie jedyny proces w pierscieniu
 			{
-				printf("# INIT # UNLINK %d i nie ma innych\n", msg.upid);
+				//printf("[FIFO] #INIT: UNLINK %d i nie ma innych\n", msg.upid);
 				wr_pid = -1;
 				wrfifo_fd = -1;
 			}
 			else // Sa inne procesy, trzeba przepiac kolejki
 			{
-				printf("# INIT # UNLINK %d - odlacza sie proces za - przepiecie kolejek\n", msg.upid);
+				//printf("[FIFO] #INIT: UNLINK %d - odlacza sie proces za - przepiecie kolejek\n", msg.upid);
 				char tmpstr[20];
 				sprintf(tmpstr, "fifo%d", pid_buf[last_taken]);
 				wr_fifoname = tmpstr;
@@ -120,19 +120,19 @@ int fifomutex_init()
 		}
 		else if(msg.type == TOKEN)
 		{
-			if( (first_free-last_taken) == 1 && msg.code != pid_buf[(first_free - 1 + N) % N])
+			/*if( (first_free-last_taken) == 1 && msg.code != pid_buf[(first_free - 1 + N) % N])
 			{
-				printf("# INIT # TOKEN od %d wrocil do inita - UDAREMNIAM BLAD\n", msg.upid);
+				printf("[FIFO] #INIT: TOKEN od %d wrocil do inita - UDAREMNIAM BLAD\n", msg.upid);
 			}
 			else if(wr_pid != -1 && unmount_state == 0)
 			{
-				printf("# INIT # TOKEN od %d wrocil do inita - przekazujemy dalej\n", msg.upid);
+				printf("[FIFO] #INIT: TOKEN od %d wrocil do inita - nie przekazujemy dalej\n", msg.upid);
 				write(wrfifo_fd, (char*)&msg, sizeof(msg));
-			}
+			}*/
 		}
 		else if(msg.type == UNMOUNT_PREPARE)
 		{
-			printf("# INIT # UNMOUNT_PREPARE \n");
+			printf("[FIFO] #INIT: UNMOUNT_PREPARE \n");
 			start_unmount();
 			if(wr_pid == -1)
 			{
@@ -142,20 +142,20 @@ int fifomutex_init()
 		}
 		else if(msg.type == UNMOUNT_EXECUTE)
 		{
-			printf("# INIT # UNMOUNT_EXECUTE - konczy sie init \n");
+			printf("[FIFO] #INIT: UNMOUNT_EXECUTE - konczy sie init \n");
 			close(initfifo_fd);
 			
 			exit(0);
 		}
 		else if(msg.type == NO_WRITERS)
 		{
-			printf("# INIT # NO_WRITERS\n");
+			printf("[FIFO] #INIT: NO_WRITERS\n");
 			no_writers_msg();
 			last_taken = first_free = 0;
 		}
 		else
 		{
-		  printf("# INIT # Nieprzewidziana sytuacja - type:%d, code: %d, upid: %d!!!\n", msg.type, msg.code, msg.upid);
+		  printf("[FIFO] #INIT: Nieprzewidziana sytuacja - type:%d, code: %d, upid: %d!!!\n", msg.type, msg.code, msg.upid);
 		}
 	}
 	

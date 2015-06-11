@@ -37,26 +37,26 @@ int fifomutex_lock(struct proc_data *data)
 	data->wrfifo_fd = open(initfifo_name, O_WRONLY);
 	if(data->wrfifo_fd == -1)
 	{
-		printf("#%d [L] kolejka fifoinit nie istnieje\n",mypid);
+		printf("[FIFO] #%d [L] kolejka fifoinit nie istnieje\n",mypid);
 		clear_fifos(data);
 		return(-1);
 	}
-	printf("#%d [L] pisze do: %s\n", mypid, initfifo_name);
+	//printf("[FIFO] #%d [L] pisze do: %s\n", mypid, initfifo_name);
 	msg.type = LINK;
 	msg.code = mypid;
 	msg.upid = mypid;
 	
 
 	data->nextproc_pid = -1;
-	printf("#%d [L] wysyla LINK do inita\n", mypid);
+	printf("[FIFO] #%d [L] wysyla LINK do inita\n", mypid);
 	write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-	puts(data->myfifo_name);
+	//puts(data->myfifo_name);
 	data->myfifo_fd = open(data->myfifo_name, O_RDONLY);
 	while(1)
 	{
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
-			printf("#%d [L] brak czytelnikow!\n",mypid);
+			printf("[FIFO] #%d [L] brak czytelnikow!\n",mypid);
 			no_writers_error(data, mypid);
 			return -2;
 		}
@@ -64,16 +64,16 @@ int fifomutex_lock(struct proc_data *data)
 		{	
 			if(msg.code == mypid)	/*powraca link ode mnie*/
 			{
-				printf("#%d [L] LINK - powraca - podlaczony do token ring\n", mypid);
+				//printf("[FIFO] #%d [L] LINK - powraca - podlaczony do token ring\n", mypid);
 			}			
 			else if(data->nextproc_pid==-1) /*gdy następny proces to init to dołącz nowy przede mnie*/
 			{			
-				printf("#%d [L] LINK - linkuje przed soba %d\n", mypid, msg.code);
+				//printf("[FIFO] #%d [L] LINK - linkuje przed soba %d\n", mypid, msg.code);
 				add_new_proc(data, &msg);
 			}
 			else
 			{
-				printf("#%d [L] LINK od pid:%d - przekazuje dalej\n", mypid, msg.code);
+				//printf("[FIFO] #%d [L] LINK od pid:%d - przekazuje dalej\n", mypid, msg.code);
 				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
@@ -81,37 +81,37 @@ int fifomutex_lock(struct proc_data *data)
 		{	
 			if(msg.upid == mypid) /*pomimo że badam pid następnego procesu to komunikat ode mnie, w lock() teoretycznie nie może przyjść*/
 			{
-				printf("#%d [L] UNLINK powraca - odsyla token - CANNOT BE!!!\n", mypid);
+				//printf("[FIFO] #%d [L] UNLINK powraca - odsyla token - CANNOT BE!!!\n", mypid);
 				fifo_unlink(mypid, data, &msg);	
 				exit(0);
 			}
 			else
 			{
-				printf("#%d [L] UNLINK od pid:%d za ktorym jest:%d\n", mypid, msg.upid, msg.code);			
+				//printf("[FIFO] #%d [L] UNLINK od pid:%d za ktorym jest:%d\n", mypid, msg.upid, msg.code);			
 				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == TOKEN)
 		{
-			printf("#%d [L] TOKEN otrzymany\n", mypid);
+			printf("[FIFO] #%d [L] TOKEN otrzymany\n", mypid);
 			return 0;	/*jesli dostałem token to wychodzę*/
 		}
 		else if(msg.type == UNMOUNT_EXECUTE)
 		{
-			printf("#%d [L] UNMOUNT_EXECUTE\n", mypid); /* prześlij dalej komunikat o błędzie i odłącz się*/
+			printf("[FIFO] #%d [L] UNMOUNT_EXECUTE\n", mypid); /* prześlij dalej komunikat o błędzie i odłącz się*/
 			write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			clear_fifos(data);
 			return -1;
 		}
 		else if(msg.type == NO_WRITERS)
 		{
-			printf("#%d [L] NO_WRITERS od %d\n", mypid, msg.upid);
+			printf("[FIFO] #%d [L] NO_WRITERS od %d\n", mypid, msg.upid);
 			no_writers_error(data, mypid); /*przyszedł błąd krytyczny - muszę się podłączyć ponownie*/
 			return -2;
 		}
 		else
 		{
-		  printf("#%d [L] Nieprzewidziana sytuacja - type:%d, code: %d, upid: %d!!!\n", mypid, msg.type, msg.code, msg.upid);
+		  printf("[FIFO] #%d [L] Nieprzewidziana sytuacja !!! - type:%d, code: %d, upid: %d!!!\n", mypid, msg.type, msg.code, msg.upid);
 		}
 	}
 }
@@ -138,7 +138,7 @@ int fifomutex_unlock(struct proc_data *data)
 	int mypid = getpid();
 	if(data->wrfifo_fd == -1 && data->myfifo_fd == -1)
 	{
-		printf("#%d [U] złe dane\n",mypid);
+		printf("[FIFO] #%d [U] złe dane\n",mypid);
 		close(data->wrfifo_fd);
 		close(data->myfifo_fd);
 		return(-1);
@@ -153,18 +153,18 @@ int fifomutex_unlock(struct proc_data *data)
 	write(data->wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
 	if(data->wrfifo_fd == -1)
 	{
-		printf("#%d [U] kolejka fifo nie istnieje\n",mypid);
+		printf("[FIFO] #%d [U] kolejka fifo nie istnieje\n",mypid);
 		clear_fifos(data);
 		free(data->myfifo_name);
 		return(-1);
 	}
-	printf("#%d [U] wysyla UNLINK\n", mypid);
+	//printf("#%d [U] wysyla UNLINK\n", mypid);
 
 	while(1)
 	{
 		if( read(data->myfifo_fd, (char*)&msg, sizeof(msg)) == 0) /*read==0 oznacza czytanie z kolejki do której nikt nie pisze*/
 		{
-			printf("#%d [U] brak czytelnikow!\n",mypid);
+			printf("[FIFO] #%d [U] brak czytelnikow!\n",mypid);
 			no_writers_error(data, mypid);
 			free(data->myfifo_name);
 			return -2;
@@ -173,12 +173,12 @@ int fifomutex_unlock(struct proc_data *data)
 		{	
 			if(data->nextproc_pid==-1)
 			{
-				printf("#%d [U] LINK %d - nastepny init - linkuje przed soba\n", mypid, msg.code);
+				//printf("#%d [U] LINK %d - nastepny init - linkuje przed soba\n", mypid, msg.code);
 				add_new_proc(data, &msg);
 			}
 			else
 			{
-				printf("#%d [U] LINK pid:%d - przekazuje dalej\n", mypid, msg.code);
+				//printf("#%d [U] LINK pid:%d - przekazuje dalej\n", mypid, msg.code);
 				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
@@ -187,26 +187,26 @@ int fifomutex_unlock(struct proc_data *data)
 			
 			if(msg.upid == mypid)
 			{
-				printf("#%d [U] UNLINK od siebie - odsyla token\n", mypid);	/* gdy wróci mój unlink to oddaję token i zamykam kolejki*/
+				//printf("#%d [U] UNLINK od siebie - odsyla token\n", mypid);	/* gdy wróci mój unlink to oddaję token i zamykam kolejki*/
 				fifo_unlink(mypid, data, &msg);	
 				free(data->myfifo_name);		
 				return(0);
 			}
 			else
 			{
-				printf("#%d [U] UNLINK od innego procesu pid:%d - ROZMNOZENIE TOKENA!!! - nie przekazuje dalej\n", mypid, msg.code);
+				printf("[FIFO] #%d [U] UNLINK od innego procesu pid:%d - ROZMNOZENIE TOKENA!!! - nie przekazuje dalej\n", mypid, msg.code);
 				//write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == TOKEN)
 		{
 			/*to sie nie moze zdarzyc ale daja na wszelki wypadek*/
-			printf("#%d [U] TOKEN od %d - ROZMNOZENIE TOKENA!!! -- nie przekazuje dalej\n", mypid, msg.code);
+			printf("[FIFO] #%d [U] TOKEN od %d - ROZMNOZENIE TOKENA!!! -- nie przekazuje dalej\n", mypid, msg.code);
 			//write(data->wrfifo_fd, (char*)&msg, sizeof(msg));		
 		}
 		else if(msg.type == UNMOUNT_EXECUTE)
 		{
-			printf("#%d [U] UNMOUNT_EXECUTE\n", mypid);
+			printf("[FIFO] #%d [U] UNMOUNT_EXECUTE\n", mypid);
 			write(data->wrfifo_fd, (char*)&msg, sizeof(msg));	
 			clear_fifos(data);
 			free(data->myfifo_name);
@@ -214,14 +214,14 @@ int fifomutex_unlock(struct proc_data *data)
 		}
 		else if(msg.type == NO_WRITERS)
 		{
-			printf("#%d [U] NO_WRITERS od %d\n", mypid, msg.upid);
+			printf("[FIFO] #%d [U] NO_WRITERS od %d\n", mypid, msg.upid);
 			no_writers_error(data, mypid);
 			free(data->myfifo_name);
 			return -2;
 		}
 		else
 		{
-		  printf("#%d [U] Nieprzewidziana sytuacja - type:%d, code: %d, upid: %d!!!\n", mypid, msg.type, msg.code, msg.upid);
+		  printf("[FIFO] #%d [U] Nieprzewidziana sytuacja !!! - type:%d, code: %d, upid: %d!!!\n", mypid, msg.type, msg.code, msg.upid);
 		}
 	}
 }
@@ -243,7 +243,7 @@ void add_new_proc(struct proc_data *data, struct fifo_msg *msg)
 	char *tmpfifoname;
 	char tmpstr[20];
 	sprintf(tmpstr, "fifo%d", msg->code);
-	printf("sprintf: %s\n",tmpstr);
+	//printf("sprintf: %s\n",tmpstr);
 	tmpfifoname = tmpstr;
 	//printf("teraz pisze do: %s\n", tmpfifoname);
 	data->nextproc_pid = msg->code;
@@ -297,15 +297,15 @@ void initialize(struct proc_data *data, int mypid)
  **************************************************************************/
 int fifomutex_startinit()
 {
-	puts("sprawdzam czy istnieje proces init");
+	//puts("[FIFO] sprawdzam czy istnieje proces init");
 	int tmp;
 	if((tmp = open(initfifo_name, O_RDWR)) != -1)
 	{
-		puts("istnieje");
+		puts("[FIFO] fsinit istnieje");
 		close(tmp);
 		return(-1);
 	}
-	puts("nie isnieje - tworze init");
+	puts("[FIFO] fsinit nie isnieje - tworze init");
 	close(tmp);
 
 	init_pid = fork();
@@ -316,14 +316,14 @@ int fifomutex_startinit()
 		ret = execl("./simplefs_init", "simplefs_init", (char*)0);
 		return ret;
 	}
-	puts("otwieram kolejkę synchronizującą");
+	//puts("otwieram kolejkę synchronizującą");
 	struct fifo_msg msg;
 	mkfifo("sync_fifo", 0666);			/*tworzy własnie fifo i wysyła link do inita*/
 	int tmp_fd = open("sync_fifo", O_RDONLY);
 	read(tmp_fd, (char*)&msg, sizeof(msg));
 	close(tmp_fd);
 	unlink("sync_fifo");
-	puts("zamykam kolejkę synchronizującą");
+	//puts("zamykam kolejkę synchronizującą");
 
 	return ret;
 }
@@ -345,7 +345,7 @@ int fifomutex_umount()
 	int tmpfifo_fd = -1;
 	if((tmpfifo_fd = open(initfifo_name, O_WRONLY)) == -1)
 	{
-		puts("Fifomutex unmount: brak kolejki init");
+		puts("[FIFO] Fifomutex unmount: brak kolejki init");
 		return -1;	
 	}
 	msg.type = UNMOUNT_PREPARE;
