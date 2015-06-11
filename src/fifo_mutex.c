@@ -49,9 +49,7 @@ int fifomutex_lock(struct proc_data *data)
 
 	data->nextproc_pid = -1;
 	printf("#%d [L] wysyla LINK do inita\n", mypid);
-	ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-	if(ret == -1 && errno == EPIPE)
-		return -1;
+	write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 	puts(data->myfifo_name);
 	data->myfifo_fd = open(data->myfifo_name, O_RDONLY);
 	while(1)
@@ -76,9 +74,7 @@ int fifomutex_lock(struct proc_data *data)
 			else
 			{
 				printf("#%d [L] LINK od pid:%d - przekazuje dalej\n", mypid, msg.code);
-				ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-				if(ret == -1 && errno == EPIPE)
-					return -2;
+				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == UNLINK)
@@ -92,9 +88,7 @@ int fifomutex_lock(struct proc_data *data)
 			else
 			{
 				printf("#%d [L] UNLINK od pid:%d za ktorym jest:%d\n", mypid, msg.upid, msg.code);			
-				ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-				if(ret == -1 && errno == EPIPE)
-					return -2;
+				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == TOKEN)
@@ -156,10 +150,7 @@ int fifomutex_unlock(struct proc_data *data)
 	unlinkmsg.type = UNLINK;
 	unlinkmsg.code = data->nextproc_pid;
 	unlinkmsg.upid = mypid;
-
-	ret = write(data->wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
-	if(ret == -1 && errno == EPIPE)
-		return -1;
+	write(data->wrfifo_fd, (char*)&unlinkmsg, sizeof(unlinkmsg));
 	if(data->wrfifo_fd == -1)
 	{
 		printf("#%d [U] kolejka fifo nie istnieje\n",mypid);
@@ -188,9 +179,7 @@ int fifomutex_unlock(struct proc_data *data)
 			else
 			{
 				printf("#%d [U] LINK pid:%d - przekazuje dalej\n", mypid, msg.code);
-				ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-				if(ret == -1 && errno == EPIPE)
-					return -2;
+				write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
 			}
 		}
 		else if(msg.type == UNLINK)
@@ -259,9 +248,7 @@ void add_new_proc(struct proc_data *data, struct fifo_msg *msg)
 	//printf("teraz pisze do: %s\n", tmpfifoname);
 	data->nextproc_pid = msg->code;
 	data->wrfifo_fd = open(tmpfifoname, O_WRONLY);
-	ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-	if(ret == -1 && errno == EPIPE)
-		return -2;
+	write(data->wrfifo_fd, (char*)msg, sizeof(struct fifo_msg));
 	close(tmpfifo_fd);
 }
 
@@ -271,9 +258,7 @@ void fifo_unlink(int mypid, struct proc_data *data, struct fifo_msg *msg)
 	msg->code=mypid;
 	msg->upid=mypid;
 				
-	ret = write(data->wrfifo_fd, (char*)&msg, sizeof(msg));
-	if(ret == -1 && errno == EPIPE)
-		return -2;
+	write(data->wrfifo_fd, (char*)msg, sizeof(struct fifo_msg));
 	clear_fifos(data);
 }
 
