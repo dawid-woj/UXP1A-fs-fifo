@@ -28,7 +28,7 @@ struct fifo_msg msg;
 int wrfifo_fd=-1;
 char *wr_fifoname;
 int wr_pid = -1;
-
+int ret=0;
 
 void ino_writers_error();
 void u_linkreq();
@@ -48,15 +48,34 @@ int main()
 int fifomutex_init()
 {
 	//utworz plik o nazwie $name
-	puts("#INIT # otwieram fifo");
-	mkfifo(initfifo_name, 0666);
+	puts("# INIT # otwieram fifo");
+	if(mkfifo(initfifo_name, 0666) == -1)
+	{
+		printf("# INIT # nie można utworzyć fifo");
+		return -1;
+	}
 	initfifo_fd = open(initfifo_name, O_RDWR);
+	if(initfifo_fd == -1)
+	{
+		printf("# INIT # nie można otworzyc fifo");
+		unlink(initfifo_name);
+		return -1;
+	}
 	puts("# INIT # otwieram fifo synchronizujace");
 	int tmp_fd = open("sync_fifo", O_WRONLY);
+	if(tmp_fd == -1)
+	{
+		printf("# INIT # nie można otworzyc fifo synchronizujacego");
+		unlink(initfifo_name);
+		close(initfifo_fd);
+		return -1;
+	}
+
 	msg.type = LINK;
 	msg.code = -1;
-	write(tmp_fd, (char*)&msg, sizeof(msg));	
+	write(tmp_fd, (char*)&msg, sizeof(msg));	/*pomijam obsluge bledow, nie ma sensu na razie*/
 	close(tmp_fd);
+
 	puts("# INIT # czekam na pierwszego");	
 	while(1)
 	{		
@@ -84,7 +103,9 @@ int fifomutex_init()
 			else
 			{
 				printf("# INIT # LINK od pid:%d - przekazuje dalej\n",msg.code);
-				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				ret = write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				if(ret == -1 && errno == EPIPE)
+					return -2;					
 			}
 		}
 		else if(msg.type == UNLINK)
@@ -115,15 +136,24 @@ int fifomutex_init()
 				wrfifo_fd = open(wr_fifoname, O_WRONLY);
 				wr_pid = pid_buf[last_taken];
 			}
-			write(tmp_fd, (char*)&msg, sizeof(msg));
+			ret = write(wrfifo_fd, (char*)&msg, sizeof(msg));
+			if(ret == -1 && errno == EPIPE)
+				return -2;
 			close(tmp_fd);
 		}
 		else if(msg.type == TOKEN)
 		{
-			if(wr_pid != -1 && unmount_state == 0)
+			//if( (first_free-last_taken) <= 2 && msg.code != pid_buf[(first_free - (first_free-last_taken) + N) % N])
+			if( (first_free-last_taken) == 1 && msg.code != pid_buf[(first_free - 1 + N) % N])
+			{
+				printf("# INIT # TOKEN od %d wrocil do inita - UDAREMNIAM BLAD\n", msg.upid);
+			}
+			else if(wr_pid != -1 && unmount_state == 0)
 			{
 				printf("# INIT # TOKEN od %d wrocil do inita - przekazujemy dalej\n", msg.upid);
-				write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				ret = write(wrfifo_fd, (char*)&msg, sizeof(msg));
+				if(ret == -1 && errno == EPIPE)
+					return -2;
 			}
 		}
 		else if(msg.type == UNMOUNT_PREPARE)
@@ -158,8 +188,7 @@ int fifomutex_init()
 }
 
 void no_writers_msg()
-{
-	
+{	
 	write(wrfifo_fd, (char*)&msg, sizeof(msg));
 	close(wrfifo_fd);
 	wr_pid = -1;

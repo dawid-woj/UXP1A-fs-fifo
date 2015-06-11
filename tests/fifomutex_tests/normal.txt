@@ -1,0 +1,695 @@
+Skrypt uruchomiony czw, 11 cze 2015, 00:30:54
+bash: /usr/bin/skype: Nie ma takiego pliku ani katalogu
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m usleep --help[1P[C[C[C[C[C[C[C[C[C[C[C[C[1@u[C[C[C[C[C[C[C[C[C[C[C[C[Ksh nom[Krmal.h[Ksh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11611 [L] pisze do: initfifo
+#11611 [L] wysyla LINK do inita
+fifo11611
+# INIT # LINK od pid:11611 - dodaje nowy proces za initem i przekazuje TOKEN
+#11611 [L] LINK - powraca - podlaczony do token ring
+#11611 [L] TOKEN otrzymany
+#11612 [L] pisze do: initfifo
+#11612 [L] wysyla LINK do inita
+		Proces pracuje#11611 [U] wysyla UNLINK
+fifo11612
+# INIT # UNLINK 11611 i nie ma innych
+# INIT # LINK od pid:11612 - dodaje nowy proces za initem i przekazuje TOKEN
+#11611 [U] UNLINK od siebie - odsyla token
+#11612 [L] LINK - powraca - podlaczony do token ring
+#11612 [L] TOKEN otrzymany
+# INIT # TOKEN od 11611 wrocil do inita - UDAREMNIAM BLAD
+		Proces pracuje#11612 [U] wysyla UNLINK
+# INIT # UNLINK 11612 i nie ma innych
+#11612 [U] UNLINK od siebie - odsyla token
+#11613 [L] pisze do: initfifo
+#11613 [L] wysyla LINK do inita
+fifo11613
+# INIT # LINK od pid:11613 - dodaje nowy proces za initem i przekazuje TOKEN
+#11613 [L] LINK - powraca - podlaczony do token ring
+#11613 [L] TOKEN otrzymany
+		Proces pracuje#11613 [U] wysyla UNLINK
+# INIT # UNLINK 11613 i nie ma innych
+#11613 [U] UNLINK od siebie - odsyla token
+#11611 [L] pisze do: initfifo
+#11611 [L] wysyla LINK do inita
+fifo11611
+# INIT # LINK od pid:11611 - dodaje nowy proces za initem i przekazuje TOKEN
+#11611 [L] LINK - powraca - podlaczony do token ring
+#11611 [L] TOKEN otrzymany
+#11612 [L] pisze do: initfifo
+#11612 [L] wysyla LINK do inita
+fifo11612
+# INIT # LINK od pid:11612 - przekazuje dalej
+		Proces pracuje#11611 [U] wysyla UNLINK
+# INIT # UNLINK 11611 - odlacza sie proces za - przepiecie kolejek
+#11611 [U] LINK 11612 - nastepny init - linkuje przed soba
+sprintf: fifo11612
+#11611 [U] UNLINK od siebie - odsyla token
+#11612 [L] LINK - powraca - podlaczony do token ring
+#11612 [L] TOKEN otrzymany
+		Proces pracuje#11612 [U] wysyla UNLINK
+# INIT # UNLINK 11612 i nie ma innych
+#11612 [U] UNLINK od siebie - odsyla token
+#11613 [L] pisze do: initfifo
+#11615 [L] pisze do: initfifo
+#11613 [L] wysyla LINK do inita
+#11615 [L] wysyla LINK do inita
+fifo11613
+fifo11615
+# INIT # LINK od pid:11613 - dodaje nowy proces za initem i przekazuje TOKEN
+#11613 [L] LINK - powraca - podlaczony do token ring
+# INIT # LINK od pid:11615 - przekazuje dalej
+#11613 [L] TOKEN otrzymany
+		Proces pracuje#11613 [U] wysyla UNLINK
+#11613 [U] LINK 11615 - nastepny init - linkuje przed soba
+sprintf: fifo11615
+# INIT # UNLINK 11613 - odlacza sie proces za - przepiecie kolejek
+#11613 [U] UNLINK od siebie - odsyla token
+#11616 [L] pisze do: initfifo
+#11616 [L] wysyla LINK do inita
+fifo11616
+# INIT # LINK od pid:11616 - przekazuje dalej
+#11615 [L] LINK - powraca - podlaczony do token ring
+#11615 [L] TOKEN otrzymany
+		Proces pracuje#11615 [U] wysyla UNLINK
+#11615 [U] LINK 11616 - nastepny init - linkuje przed soba
+sprintf: fifo11616
+# INIT # UNLINK 11615 - odlacza sie proces za - przepiecie kolejek
+#11616 [L] LINK - powraca - podlaczony do token ring
+#11615 [U] UNLINK od siebie - odsyla token
+#11616 [L] TOKEN otrzymany
+		Proces pracuje#11616 [U] wysyla UNLINK
+# INIT # UNLINK 11616 i nie ma innych
+#11616 [U] UNLINK od siebie - odsyla token
+#11615 [L] pisze do: initfifo
+#11615 [L] wysyla LINK do inita
+# INIT # LINK od pid:11615 - dodaje nowy proces za initem i przekazuje TOKEN
+fifo11615
+#11616 [L] pisze do: initfifo
+#11616 [L] wysyla LINK do inita
+fifo11616
+# INIT # LINK od pid:11616 - przekazuje dalej
+#11615 [L] LINK - powraca - podlaczony do token ring
+#11615 [L] TOKEN otrzymany
+		Proces pracuje#11615 [U] wysyla UNLINK
+# INIT # UNLINK 11615 - odlacza sie proces za - przepiecie kolejek
+#11615 [U] LINK 11616 - nastepny init - linkuje przed soba
+sprintf: fifo11616
+#11616 [L] LINK - powraca - podlaczony do token ring
+#11615 [U] UNLINK od siebie - odsyla token
+#11616 [L] TOKEN otrzymany
+		Proces pracuje#11616 [U] wysyla UNLINK
+# INIT # UNLINK 11616 i nie ma innych
+#11616 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m sh normal.sh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11628 [L] pisze do: initfifo
+#11628 [L] wysyla LINK do inita
+# INIT # LINK od pid:11628 - dodaje nowy proces za initem i przekazuje TOKEN
+fifo11628
+#11628 [L] LINK - powraca - podlaczony do token ring
+#11628 [L] TOKEN otrzymany
+#11630 [L] pisze do: initfifo
+#11630 [L] wysyla LINK do inita
+fifo11630
+# INIT # LINK od pid:11630 - przekazuje dalej
+#11629 [L] pisze do: initfifo
+		Proces pracuje#11628 [U] wysyla UNLINK
+# INIT # UNLINK 11628 - odlacza sie proces za - przepiecie kolejek
+#11629 [L] wysyla LINK do inita
+fifo11629
+#11628 [U] LINK 11630 - nastepny init - linkuje przed soba
+# INIT # LINK od pid:11629 - przekazuje dalej
+sprintf: fifo11630
+#11630 [L] LINK - linkuje przed soba 11629
+#11628 [U] UNLINK od siebie - odsyla token
+sprintf: fifo11629
+#11629 [L] LINK - powraca - podlaczony do token ring
+#11630 [L] LINK - powraca - podlaczony do token ring
+#11630 [L] TOKEN otrzymany
+		Proces pracuje#11630 [U] wysyla UNLINK
+#11629 [L] UNLINK od pid:11630 za ktorym jest:11629
+# INIT # UNLINK 11630 - odlacza sie proces za - przepiecie kolejek
+#11630 [U] UNLINK od siebie - odsyla token
+#11629 [L] TOKEN otrzymany
+		Proces pracuje#11629 [U] wysyla UNLINK
+# INIT # UNLINK 11629 i nie ma innych
+#11629 [U] UNLINK od siebie - odsyla token
+#11632 [L] pisze do: initfifo
+#11628 [L] pisze do: initfifo
+#11628 [L] wysyla LINK do inita
+# INIT # LINK od pid:11628 - dodaje nowy proces za initem i przekazuje TOKEN
+fifo11628
+#11628 [L] LINK - powraca - podlaczony do token ring
+#11628 [L] TOKEN otrzymany
+#11632 [L] wysyla LINK do inita
+# INIT # LINK od pid:11632 - przekazuje dalej
+fifo11632
+# INIT # UNLINK 11628 - odlacza sie proces za - przepiecie kolejek
+		Proces pracuje#11628 [U] wysyla UNLINK
+#11630 [L] pisze do: initfifo
+#11630 [L] wysyla LINK do inita
+fifo11630
+#11628 [U] LINK 11632 - nastepny init - linkuje przed soba
+sprintf: fifo11632
+# INIT # LINK od pid:11630 - przekazuje dalej
+#11628 [U] UNLINK od siebie - odsyla token
+#11633 [L] pisze do: initfifo
+#11633 [L] wysyla LINK do inita
+fifo11633
+# INIT # LINK od pid:11633 - przekazuje dalej
+#11632 [L] LINK - linkuje przed soba 11630
+#11629 [L] pisze do: initfifo
+#11629 [L] wysyla LINK do inita
+sprintf: fifo11630
+# INIT # LINK od pid:11629 - przekazuje dalej
+fifo11629
+#11630 [L] LINK - powraca - podlaczony do token ring
+#11632 [L] LINK - powraca - podlaczony do token ring
+#11632 [L] TOKEN otrzymany
+		Proces pracuje#11632 [U] wysyla UNLINK
+#11630 [L] UNLINK od pid:11632 za ktorym jest:11630
+#11632 [U] LINK pid:11633 - przekazuje dalej
+#11632 [U] LINK pid:11629 - przekazuje dalej
+# INIT # UNLINK 11632 - odlacza sie proces za - przepiecie kolejek
+#11632 [U] UNLINK od siebie - odsyla token
+#11630 [L] LINK - linkuje przed soba 11633
+sprintf: fifo11633
+#11633 [L] LINK - powraca - podlaczony do token ring
+#11630 [L] LINK od pid:11629 - przekazuje dalej
+#11630 [L] TOKEN otrzymany
+#11633 [L] LINK - linkuje przed soba 11629
+sprintf: fifo11629
+#11629 [L] LINK - powraca - podlaczony do token ring
+		Proces pracuje#11630 [U] wysyla UNLINK
+#11633 [L] UNLINK od pid:11630 za ktorym jest:11633
+#11629 [L] UNLINK od pid:11630 za ktorym jest:11633
+# INIT # UNLINK 11630 - odlacza sie proces za - przepiecie kolejek
+#11630 [U] UNLINK od siebie - odsyla token
+#11633 [L] TOKEN otrzymany
+		Proces pracuje#11633 [U] wysyla UNLINK
+#11629 [L] UNLINK od pid:11633 za ktorym jest:11629
+# INIT # UNLINK 11633 - odlacza sie proces za - przepiecie kolejek
+#11633 [U] UNLINK od siebie - odsyla token
+#11629 [L] TOKEN otrzymany
+		Proces pracuje#11629 [U] wysyla UNLINK
+# INIT # UNLINK 11629 i nie ma innych
+#11629 [U] UNLINK od siebie - odsyla token
+#11632 [L] pisze do: initfifo
+#11632 [L] wysyla LINK do inita
+fifo11632
+# INIT # LINK od pid:11632 - dodaje nowy proces za initem i przekazuje TOKEN
+#11632 [L] LINK - powraca - podlaczony do token ring
+#11632 [L] TOKEN otrzymany
+		Proces pracuje#11632 [U] wysyla UNLINK
+# INIT # UNLINK 11632 i nie ma innych
+#11632 [U] UNLINK od siebie - odsyla token
+#11633 [L] pisze do: initfifo
+#11633 [L] wysyla LINK do inita
+fifo11633
+# INIT # LINK od pid:11633 - dodaje nowy proces za initem i przekazuje TOKEN
+#11633 [L] LINK - powraca - podlaczony do token ring
+#11633 [L] TOKEN otrzymany
+		Proces pracuje#11633 [U] wysyla UNLINK
+# INIT # UNLINK 11633 i nie ma innych
+#11633 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m sh normal.sh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11648 [L] pisze do: initfifo
+#11648 [L] wysyla LINK do inita
+#11650 [L] pisze do: initfifo
+#11650 [L] wysyla LINK do inita
+fifo11648
+fifo11650
+# INIT # LINK od pid:11648 - dodaje nowy proces za initem i przekazuje TOKEN
+# INIT # LINK od pid:11650 - przekazuje dalej
+#11648 [L] LINK - powraca - podlaczony do token ring
+#11648 [L] TOKEN otrzymany
+		Proces pracuje#11648 [U] wysyla UNLINK
+#11648 [U] LINK 11650 - nastepny init - linkuje przed soba
+sprintf: fifo11650
+# INIT # UNLINK 11648 - odlacza sie proces za - przepiecie kolejek
+#11650 [L] LINK - powraca - podlaczony do token ring
+#11648 [U] UNLINK od siebie - odsyla token
+#11650 [L] TOKEN otrzymany
+#11649 [L] pisze do: initfifo
+# INIT # UNLINK 11650 i nie ma innych
+#11649 [L] wysyla LINK do inita
+		Proces pracuje#11650 [U] wysyla UNLINK
+fifo11649
+#11650 [U] UNLINK od siebie - odsyla token
+# INIT # LINK od pid:11649 - dodaje nowy proces za initem i przekazuje TOKEN
+# INIT # TOKEN od 11650 wrocil do inita - UDAREMNIAM BLAD
+#11649 [L] LINK - powraca - podlaczony do token ring
+#11649 [L] TOKEN otrzymany
+		Proces pracuje#11649 [U] wysyla UNLINK
+# INIT # UNLINK 11649 i nie ma innych
+#11649 [U] UNLINK od siebie - odsyla token
+#11648 [L] pisze do: initfifo
+#11648 [L] wysyla LINK do inita
+fifo11648
+# INIT # LINK od pid:11648 - dodaje nowy proces za initem i przekazuje TOKEN
+#11648 [L] LINK - powraca - podlaczony do token ring
+#11648 [L] TOKEN otrzymany
+#11650 [L] pisze do: initfifo
+#11650 [L] wysyla LINK do inita
+fifo11650
+# INIT # LINK od pid:11650 - przekazuje dalej
+		Proces pracuje#11648 [U] wysyla UNLINK
+# INIT # UNLINK 11648 - odlacza sie proces za - przepiecie kolejek
+#11648 [U] LINK 11650 - nastepny init - linkuje przed soba
+sprintf: fifo11650
+#11650 [L] LINK - powraca - podlaczony do token ring
+#11648 [U] UNLINK od siebie - odsyla token
+#11650 [L] TOKEN otrzymany
+		Proces pracuje#11650 [U] wysyla UNLINK
+# INIT # UNLINK 11650 i nie ma innych
+#11650 [U] UNLINK od siebie - odsyla token
+#11649 [L] pisze do: initfifo
+#11649 [L] wysyla LINK do inita
+fifo11649
+# INIT # LINK od pid:11649 - dodaje nowy proces za initem i przekazuje TOKEN
+#11649 [L] LINK - powraca - podlaczony do token ring
+#11649 [L] TOKEN otrzymany
+		Proces pracuje#11649 [U] wysyla UNLINK
+# INIT # UNLINK 11649 i nie ma innych
+#11649 [U] UNLINK od siebie - odsyla token
+#11653 [L] pisze do: initfifo
+#11653 [L] wysyla LINK do inita
+fifo11653
+# INIT # LINK od pid:11653 - dodaje nowy proces za initem i przekazuje TOKEN
+#11653 [L] LINK - powraca - podlaczony do token ring
+#11653 [L] TOKEN otrzymany
+		Proces pracuje#11653 [U] wysyla UNLINK
+# INIT # UNLINK 11653 i nie ma innych
+#11653 [U] UNLINK od siebie - odsyla token
+#11655 [L] pisze do: initfifo
+#11655 [L] wysyla LINK do inita
+fifo11655
+# INIT # LINK od pid:11655 - dodaje nowy proces za initem i przekazuje TOKEN
+#11655 [L] LINK - powraca - podlaczony do token ring
+#11655 [L] TOKEN otrzymany
+		Proces pracuje#11655 [U] wysyla UNLINK
+# INIT # UNLINK 11655 i nie ma innych
+#11655 [U] UNLINK od siebie - odsyla token
+#11653 [L] pisze do: initfifo
+#11653 [L] wysyla LINK do inita
+fifo11653
+# INIT # LINK od pid:11653 - dodaje nowy proces za initem i przekazuje TOKEN
+#11653 [L] LINK - powraca - podlaczony do token ring
+#11653 [L] TOKEN otrzymany
+		Proces pracuje#11653 [U] wysyla UNLINK
+# INIT # UNLINK 11653 i nie ma innych
+#11653 [U] UNLINK od siebie - odsyla token
+#11655 [L] pisze do: initfifo
+#11655 [L] wysyla LINK do inita
+fifo11655
+# INIT # LINK od pid:11655 - dodaje nowy proces za initem i przekazuje TOKEN
+#11655 [L] LINK - powraca - podlaczony do token ring
+#11655 [L] TOKEN otrzymany
+		Proces pracuje#11655 [U] wysyla UNLINK
+# INIT # UNLINK 11655 i nie ma innych
+#11655 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m sh normal.sh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11667 [L] pisze do: initfifo
+#11667 [L] wysyla LINK do inita
+fifo11667
+# INIT # LINK od pid:11667 - dodaje nowy proces za initem i przekazuje TOKEN
+#11667 [L] LINK - powraca - podlaczony do token ring
+#11667 [L] TOKEN otrzymany
+#11668 [L] pisze do: initfifo
+#11668 [L] wysyla LINK do inita
+fifo11668
+# INIT # LINK od pid:11668 - przekazuje dalej
+#11669 [L] pisze do: initfifo
+# INIT # UNLINK 11667 - odlacza sie proces za - przepiecie kolejek
+		Proces pracuje#11667 [U] wysyla UNLINK
+#11667 [U] LINK 11668 - nastepny init - linkuje przed soba
+sprintf: fifo11668
+#11668 [L] LINK - powraca - podlaczony do token ring
+#11669 [L] wysyla LINK do inita
+fifo11669
+#11667 [U] UNLINK od siebie - odsyla token
+# INIT # LINK od pid:11669 - przekazuje dalej
+#11668 [L] TOKEN otrzymany
+		Proces pracuje#11668 [U] wysyla UNLINK
+# INIT # UNLINK 11668 - odlacza sie proces za - przepiecie kolejek
+#11668 [U] LINK 11669 - nastepny init - linkuje przed soba
+sprintf: fifo11669
+#11669 [L] LINK - powraca - podlaczony do token ring
+#11668 [U] UNLINK od siebie - odsyla token
+#11669 [L] TOKEN otrzymany
+		Proces pracuje#11669 [U] wysyla UNLINK
+# INIT # UNLINK 11669 i nie ma innych
+#11669 [U] UNLINK od siebie - odsyla token
+#11667 [L] pisze do: initfifo
+#11667 [L] wysyla LINK do inita
+fifo11667
+# INIT # LINK od pid:11667 - dodaje nowy proces za initem i przekazuje TOKEN
+#11667 [L] LINK - powraca - podlaczony do token ring
+#11667 [L] TOKEN otrzymany
+		Proces pracuje#11667 [U] wysyla UNLINK
+# INIT # UNLINK 11667 i nie ma innych
+#11667 [U] UNLINK od siebie - odsyla token
+#11668 [L] pisze do: initfifo
+#11672 [L] pisze do: initfifo
+#11668 [L] wysyla LINK do inita
+#11672 [L] wysyla LINK do inita
+fifo11668
+fifo11672
+# INIT # LINK od pid:11668 - dodaje nowy proces za initem i przekazuje TOKEN
+# INIT # LINK od pid:11672 - przekazuje dalej
+#11668 [L] LINK - powraca - podlaczony do token ring
+#11668 [L] TOKEN otrzymany
+		Proces pracuje#11668 [U] wysyla UNLINK
+# INIT # UNLINK 11668 - odlacza sie proces za - przepiecie kolejek
+#11668 [U] LINK 11672 - nastepny init - linkuje przed soba
+sprintf: fifo11672
+#11668 [U] UNLINK od siebie - odsyla token
+#11669 [L] pisze do: initfifo
+#11669 [L] wysyla LINK do inita
+fifo11669
+# INIT # LINK od pid:11669 - przekazuje dalej
+#11673 [L] pisze do: initfifo
+#11673 [L] wysyla LINK do inita
+fifo11673
+# INIT # LINK od pid:11673 - przekazuje dalej
+#11672 [L] LINK - powraca - podlaczony do token ring
+#11672 [L] TOKEN otrzymany
+		Proces pracuje#11672 [U] wysyla UNLINK
+#11672 [U] LINK 11669 - nastepny init - linkuje przed soba
+sprintf: fifo11669
+#11672 [U] LINK pid:11673 - przekazuje dalej
+# INIT # UNLINK 11672 - odlacza sie proces za - przepiecie kolejek
+#11669 [L] LINK - powraca - podlaczony do token ring
+#11669 [L] LINK - linkuje przed soba 11673
+#11672 [U] UNLINK od siebie - odsyla token
+sprintf: fifo11673
+#11669 [L] TOKEN otrzymany
+#11673 [L] LINK - powraca - podlaczony do token ring
+		Proces pracuje#11669 [U] wysyla UNLINK
+#11673 [L] UNLINK od pid:11669 za ktorym jest:11673
+# INIT # UNLINK 11669 - odlacza sie proces za - przepiecie kolejek
+#11669 [U] UNLINK od siebie - odsyla token
+#11673 [L] TOKEN otrzymany
+		Proces pracuje#11673 [U] wysyla UNLINK
+# INIT # UNLINK 11673 i nie ma innych
+#11673 [U] UNLINK od siebie - odsyla token
+#11672 [L] pisze do: initfifo
+#11672 [L] wysyla LINK do inita
+fifo11672
+# INIT # LINK od pid:11672 - dodaje nowy proces za initem i przekazuje TOKEN
+#11672 [L] LINK - powraca - podlaczony do token ring
+#11672 [L] TOKEN otrzymany
+		Proces pracuje#11672 [U] wysyla UNLINK
+# INIT # UNLINK 11672 i nie ma innych
+#11672 [U] UNLINK od siebie - odsyla token
+#11673 [L] pisze do: initfifo
+#11673 [L] wysyla LINK do inita
+fifo11673
+# INIT # LINK od pid:11673 - dodaje nowy proces za initem i przekazuje TOKEN
+#11673 [L] LINK - powraca - podlaczony do token ring
+#11673 [L] TOKEN otrzymany
+		Proces pracuje#11673 [U] wysyla UNLINK
+# INIT # UNLINK 11673 i nie ma innych
+#11673 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m sh normal.sh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11687 [L] pisze do: initfifo
+#11687 [L] wysyla LINK do inita
+fifo11687
+# INIT # LINK od pid:11687 - dodaje nowy proces za initem i przekazuje TOKEN
+#11688 [L] pisze do: initfifo
+#11688 [L] wysyla LINK do inita
+fifo11688
+# INIT # LINK od pid:11688 - przekazuje dalej
+#11687 [L] LINK - powraca - podlaczony do token ring
+#11687 [L] TOKEN otrzymany
+#11689 [L] pisze do: initfifo
+		Proces pracuje#11687 [U] wysyla UNLINK
+# INIT # UNLINK 11687 - odlacza sie proces za - przepiecie kolejek
+#11687 [U] LINK 11688 - nastepny init - linkuje przed soba
+sprintf: fifo11688
+#11689 [L] wysyla LINK do inita
+# INIT # LINK od pid:11689 - przekazuje dalej
+fifo11689
+#11687 [U] UNLINK od siebie - odsyla token
+#11688 [L] LINK - powraca - podlaczony do token ring
+#11688 [L] LINK - linkuje przed soba 11689
+sprintf: fifo11689
+#11688 [L] TOKEN otrzymany
+#11689 [L] LINK - powraca - podlaczony do token ring
+		Proces pracuje#11688 [U] wysyla UNLINK
+#11689 [L] UNLINK od pid:11688 za ktorym jest:11689
+# INIT # UNLINK 11688 - odlacza sie proces za - przepiecie kolejek
+#11688 [U] UNLINK od siebie - odsyla token
+#11689 [L] TOKEN otrzymany
+		Proces pracuje#11689 [U] wysyla UNLINK
+# INIT # UNLINK 11689 i nie ma innych
+#11689 [U] UNLINK od siebie - odsyla token
+#11687 [L] pisze do: initfifo
+#11687 [L] wysyla LINK do inita
+# INIT # LINK od pid:11687 - dodaje nowy proces za initem i przekazuje TOKEN
+fifo11687
+#11688 [L] pisze do: initfifo
+#11688 [L] wysyla LINK do inita
+#11687 [L] LINK - powraca - podlaczony do token ring
+fifo11688
+# INIT # LINK od pid:11688 - przekazuje dalej
+#11689 [L] pisze do: initfifo
+#11689 [L] wysyla LINK do inita
+fifo11689
+# INIT # LINK od pid:11689 - przekazuje dalej
+#11691 [L] pisze do: initfifo
+#11692 [L] pisze do: initfifo
+#11687 [L] TOKEN otrzymany
+#11691 [L] wysyla LINK do inita
+#11692 [L] wysyla LINK do inita
+fifo11691
+# INIT # LINK od pid:11691 - przekazuje dalej
+fifo11692
+# INIT # LINK od pid:11692 - przekazuje dalej
+		Proces pracuje#11687 [U] wysyla UNLINK
+# INIT # UNLINK 11687 - odlacza sie proces za - przepiecie kolejek
+#11687 [U] LINK 11688 - nastepny init - linkuje przed soba
+sprintf: fifo11688
+#11687 [U] LINK pid:11689 - przekazuje dalej
+#11687 [U] LINK pid:11691 - przekazuje dalej
+#11688 [L] LINK - powraca - podlaczony do token ring
+#11687 [U] LINK pid:11692 - przekazuje dalej
+#11688 [L] LINK - linkuje przed soba 11689
+#11687 [U] UNLINK od siebie - odsyla token
+sprintf: fifo11689
+#11689 [L] LINK - powraca - podlaczony do token ring
+#11688 [L] LINK od pid:11691 - przekazuje dalej
+#11689 [L] LINK - linkuje przed soba 11691
+sprintf: fifo11691
+#11691 [L] LINK - powraca - podlaczony do token ring
+#11688 [L] LINK od pid:11692 - przekazuje dalej
+#11689 [L] LINK od pid:11692 - przekazuje dalej
+#11691 [L] LINK - linkuje przed soba 11692
+#11688 [L] TOKEN otrzymany
+sprintf: fifo11692
+#11692 [L] LINK - powraca - podlaczony do token ring
+		Proces pracuje#11688 [U] wysyla UNLINK
+#11689 [L] UNLINK od pid:11688 za ktorym jest:11689
+#11691 [L] UNLINK od pid:11688 za ktorym jest:11689
+#11692 [L] UNLINK od pid:11688 za ktorym jest:11689
+# INIT # UNLINK 11688 - odlacza sie proces za - przepiecie kolejek
+#11688 [U] UNLINK od siebie - odsyla token
+#11689 [L] TOKEN otrzymany
+		Proces pracuje#11689 [U] wysyla UNLINK
+#11691 [L] UNLINK od pid:11689 za ktorym jest:11691
+#11692 [L] UNLINK od pid:11689 za ktorym jest:11691
+# INIT # UNLINK 11689 - odlacza sie proces za - przepiecie kolejek
+#11689 [U] UNLINK od siebie - odsyla token
+#11691 [L] TOKEN otrzymany
+		Proces pracuje#11691 [U] wysyla UNLINK
+#11692 [L] UNLINK od pid:11691 za ktorym jest:11692
+# INIT # UNLINK 11691 - odlacza sie proces za - przepiecie kolejek
+#11691 [U] UNLINK od siebie - odsyla token
+#11692 [L] TOKEN otrzymany
+		Proces pracuje#11692 [U] wysyla UNLINK
+# INIT # UNLINK 11692 i nie ma innych
+#11692 [U] UNLINK od siebie - odsyla token
+#11691 [L] pisze do: initfifo
+#11691 [L] wysyla LINK do inita
+fifo11691
+# INIT # LINK od pid:11691 - dodaje nowy proces za initem i przekazuje TOKEN
+#11691 [L] LINK - powraca - podlaczony do token ring
+#11691 [L] TOKEN otrzymany
+# INIT # UNLINK 11691 i nie ma innych
+#11692 [L] pisze do: initfifo
+#11692 [L] wysyla LINK do inita
+		Proces pracuje#11691 [U] wysyla UNLINK
+# INIT # LINK od pid:11692 - dodaje nowy proces za initem i przekazuje TOKEN
+#11691 [U] UNLINK od siebie - odsyla token
+fifo11692
+# INIT # TOKEN od 11691 wrocil do inita - UDAREMNIAM BLAD
+#11692 [L] LINK - powraca - podlaczony do token ring
+#11692 [L] TOKEN otrzymany
+# INIT # UNLINK 11692 i nie ma innych
+		Proces pracuje#11692 [U] wysyla UNLINK
+#11692 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m sh normal.sh
+Tworze fifoinit
+sprawdzam czy istnieje proces init
+nie isnieje - tworze init
+otwieram kolejkę synchronizującą
+#INIT # otwieram fifo
+# INIT # otwieram fifo synchronizujace
+# INIT # czekam na pierwszego
+zamykam kolejkę synchronizującą
+#11708 [L] pisze do: initfifo
+#11708 [L] wysyla LINK do inita
+fifo11708
+# INIT # LINK od pid:11708 - dodaje nowy proces za initem i przekazuje TOKEN
+#11710 [L] pisze do: initfifo
+#11710 [L] wysyla LINK do inita
+# INIT # LINK od pid:11710 - przekazuje dalej
+fifo11710
+#11708 [L] LINK - powraca - podlaczony do token ring
+#11708 [L] TOKEN otrzymany
+		Proces pracuje#11708 [U] wysyla UNLINK
+# INIT # UNLINK 11708 - odlacza sie proces za - przepiecie kolejek
+#11708 [U] LINK 11710 - nastepny init - linkuje przed soba
+sprintf: fifo11710
+#11710 [L] LINK - powraca - podlaczony do token ring
+#11708 [U] UNLINK od siebie - odsyla token
+#11710 [L] TOKEN otrzymany
+#11709 [L] pisze do: initfifo
+#11709 [L] wysyla LINK do inita
+# INIT # UNLINK 11710 i nie ma innych
+fifo11709
+# INIT # LINK od pid:11709 - dodaje nowy proces za initem i przekazuje TOKEN
+#11709 [L] LINK - powraca - podlaczony do token ring
+#11709 [L] TOKEN otrzymany
+		Proces pracuje#11710 [U] wysyla UNLINK
+#11710 [U] UNLINK od siebie - odsyla token
+# INIT # TOKEN od 11710 wrocil do inita - UDAREMNIAM BLAD
+		Proces pracuje#11709 [U] wysyla UNLINK
+# INIT # UNLINK 11709 i nie ma innych
+#11709 [U] UNLINK od siebie - odsyla token
+#11708 [L] pisze do: initfifo
+#11708 [L] wysyla LINK do inita
+fifo11708
+# INIT # LINK od pid:11708 - dodaje nowy proces za initem i przekazuje TOKEN
+#11708 [L] LINK - powraca - podlaczony do token ring
+#11708 [L] TOKEN otrzymany
+#11710 [L] pisze do: initfifo
+# INIT # UNLINK 11708 i nie ma innych
+#11710 [L] wysyla LINK do inita
+fifo11710
+# INIT # LINK od pid:11710 - dodaje nowy proces za initem i przekazuje TOKEN
+#11710 [L] LINK - powraca - podlaczony do token ring
+#11709 [L] pisze do: initfifo
+#11709 [L] wysyla LINK do inita
+#11710 [L] TOKEN otrzymany
+# INIT # LINK od pid:11709 - przekazuje dalej
+		Proces pracuje#11708 [U] wysyla UNLINK
+#11708 [U] UNLINK od siebie - odsyla token
+fifo11709
+# INIT # TOKEN od 11708 wrocil do inita - przekazujemy dalej
+# INIT # UNLINK 11710 - odlacza sie proces za - przepiecie kolejek
+		Proces pracuje#11710 [U] wysyla UNLINK
+#11710 [U] LINK 11709 - nastepny init - linkuje przed soba
+sprintf: fifo11709
+#11709 [L] LINK - powraca - podlaczony do token ring
+#11710 [U] TOKEN od 11708 - ROZMNOZENIE TOKENA!!! -- nie przekazuje dalej
+#11710 [U] UNLINK od siebie - odsyla token
+#11709 [L] TOKEN otrzymany
+		Proces pracuje#11709 [U] wysyla UNLINK
+# INIT # UNLINK 11709 i nie ma innych
+#11709 [U] UNLINK od siebie - odsyla token
+#11713 [L] pisze do: initfifo
+#11713 [L] wysyla LINK do inita
+#11712 [L] pisze do: initfifo
+# INIT # LINK od pid:11713 - dodaje nowy proces za initem i przekazuje TOKEN
+fifo11713
+#11712 [L] wysyla LINK do inita
+fifo11712
+#11713 [L] LINK - powraca - podlaczony do token ring
+# INIT # LINK od pid:11712 - przekazuje dalej
+#11713 [L] TOKEN otrzymany
+		Proces pracuje#11713 [U] wysyla UNLINK
+# INIT # UNLINK 11713 - odlacza sie proces za - przepiecie kolejek
+#11713 [U] LINK 11712 - nastepny init - linkuje przed soba
+sprintf: fifo11712
+#11712 [L] LINK - powraca - podlaczony do token ring
+#11713 [U] UNLINK od siebie - odsyla token
+#11712 [L] TOKEN otrzymany
+		Proces pracuje#11712 [U] wysyla UNLINK
+# INIT # UNLINK 11712 i nie ma innych
+#11712 [U] UNLINK od siebie - odsyla token
+#11713 [L] pisze do: initfifo
+#11713 [L] wysyla LINK do inita
+fifo11713
+# INIT # LINK od pid:11713 - dodaje nowy proces za initem i przekazuje TOKEN
+#11712 [L] pisze do: initfifo
+#11712 [L] wysyla LINK do inita
+#11713 [L] LINK - powraca - podlaczony do token ring
+# INIT # LINK od pid:11712 - przekazuje dalej
+#11713 [L] TOKEN otrzymany
+fifo11712
+		Proces pracuje#11713 [U] wysyla UNLINK
+# INIT # UNLINK 11713 - odlacza sie proces za - przepiecie kolejek
+#11713 [U] LINK 11712 - nastepny init - linkuje przed soba
+sprintf: fifo11712
+#11713 [U] UNLINK od siebie - odsyla token
+#11712 [L] LINK - powraca - podlaczony do token ring
+#11712 [L] TOKEN otrzymany
+		Proces pracuje#11712 [U] wysyla UNLINK
+# INIT # UNLINK 11712 i nie ma innych
+#11712 [U] UNLINK od siebie - odsyla token
+Zamykam init
+# INIT # UNMOUNT_PREPARE 
+[01;32mszymon@szymon-K55VD[01;34m ~/Dokumenty/SFS_UNIX/UXP1A-fs-fifo/tests/fifomutex_tests $[00m exit
+exit
+
+Skrypt wykonany czw, 11 cze 2015, 00:31:58

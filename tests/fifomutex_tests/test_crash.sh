@@ -1,5 +1,5 @@
 echo Tworze fifoinit
-../../bin/simplefs_init &
+./openinit
 INIT_PID=$!
 echo Tworze 4 procesy
 ./process &
@@ -10,7 +10,8 @@ PID2=$!
 PID3=$!
 ./process &
 PID4=$!
-sleep 3s
+sleep 1s
+echo KILL PROCES
 kill $PID1
 wait $PID1 
 wait $PID2
